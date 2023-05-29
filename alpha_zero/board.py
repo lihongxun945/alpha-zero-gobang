@@ -85,9 +85,9 @@ class Board:
                 if piece == 0:
                     print(" . ", end="")
                 elif piece == 1:
-                    print(" ○ ", end="")
+                    print(" O ", end="")
                 else:
-                    print(" × ", end="")
+                    print(" X ", end="")
             print()
 
     def get_valid_moves(self):
@@ -116,9 +116,8 @@ class Board:
         col = position % self.size
         return row, col
 
-    def get_data(self):
-        x = np.zeros((self.size, self.size, 17), dtype=np.int8)
-
+    def get_data(self, next_action):
+        x = np.zeros((17, self.size, self.size), dtype=np.int8)
         # 填充棋盘状态
         history_len = len(self.history)
         for i in range(16):
@@ -132,19 +131,16 @@ class Board:
                     state[row, col] = color
 
                 # 将每一次落子后的棋盘状态标记到x的前16个平面上
-                x[:, :, 15 - i] = state
+                x[15 - i, :, :] = state
 
         # 最后一个平面表示当前轮到哪一方落子
-        x[:, :, -1] = self.current_color  # 全部的值都是当前角色
+        x[-1, :, :] = self.current_player # 全部的值都是当前角色
 
         v = self.get_winner()  # 胜负情况
 
         # 创建一个全零向量表示落子概率
         pi = np.zeros(self.size * self.size)
-        if len(self.history) > 0:
-            # 最后一步落子位置的概率设为1，其他设为0
-            last_move = self.history[-1][0]
-            pi[last_move] = 1
+        pi[next_action] = 1
         
         y = [v, pi]
 
