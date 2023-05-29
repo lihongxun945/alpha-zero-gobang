@@ -11,4 +11,4 @@ class PureMCTSPlayer:
         self.mcts = PureMCTS(board, simulation_num)
 
     def move(self):
-        return self.mcts.move()
+        return self.mcts.move(None, True)

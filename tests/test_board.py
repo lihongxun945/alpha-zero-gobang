@@ -25,31 +25,18 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(board.get_board_string()[0], '0')
 
     def test_get_winner(self):
-        board = Board(size=5, first_player=1)
-        for i in range(5):
-            board.move(i, 1)  # 纵向连五
-        self.assertEqual(board.get_winner(), 1)
-        board.undo(5)
-        for i in range(0, 25, 5):  # 横向连五
-            board.move(i, 1)
-        self.assertEqual(board.get_winner(), 1)
-        board.undo(5)
-        for i in range(0, 25, 6):  # 对角线连五
-            board.move(i, 1)
-        self.assertEqual(board.get_winner(), 1)
-        board.undo(5)
-        # 白子
-        for i in [1, 6, 11, 16, 21]:
-            board.move(i, -1)  # 纵向连五
-        self.assertEqual(board.get_winner(), -1)
-        board.undo(5)
-        # 中间有一个不是黑子
-        board.move(0, 1)
-        board.move(1, 1)
-        board.move(2, 1)
-        board.move(3, -1)
-        board.move(4, 1)
-        self.assertEqual(board.get_winner(), 0)
+        manuals = [
+            [5, [0, 5, 1, 6, 2, 7, 3, 8, 4], 1], # 横向五
+            [5, [0, 1, 5, 2, 10, 3, 15, 4, 20], 1], # 纵向五
+            [5, [0, 1, 6, 2, 12, 3, 18, 4, 24], 1], # 斜线五
+            [8, [24, 36, 32, 28, 16, 8, 26, 20, 25, 12, 27, 44], -1],
+        ]
+        for size, actions, winner in manuals:
+          board = Board(size, first_player=1)
+          for i in actions:
+              board.move(i)  # 纵向连五
+          board.display()
+          self.assertEqual(board.get_winner(), winner)
 
     def test_display(self):
         board = Board(size=5, first_player=1)

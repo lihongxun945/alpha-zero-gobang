@@ -24,8 +24,6 @@ class Node:
         return self.parent is None
 
     def get_value(self):
-        if self.visit_count == 0:
-            return float('-inf')
         return self.q_value / self.visit_count
 
     def expand(self, action_priors):
@@ -47,7 +45,13 @@ class Node:
 
     def display(self):
         for action, node in self.children.items():
-            print(f"Action: {action}, Value: {node.get_value()}, Visit Count: {node.visit_count}")
+            print(f"Action: {action}, Value: {node.q_value}, Visit Count: {node.visit_count}")
+
+    def display_tree(self, depth=0, action=-1):
+        print('  ' * depth + f'Node: {action} Visit count: {self.visit_count}')
+        for action, node in self.children.items():
+            node.display_tree(depth + 1, action)
+
     def get_visit_count(self):
         return self.visit_count 
 
@@ -75,16 +79,26 @@ class PureMCTS:
 
         winner = board_copy.get_winner()
         node.update_recursive(-winner if color == 1 else winner)
+        return winner
 
     def move(self, color=None, verbose=False):
         self.root = Node() # reset the root node
-        self.simulate_count = 1
         if color is None:
             color = self.board.get_current_player_color()
 
+        black_wins = 0
+        white_wins = 0
+        draws = 0
         for _ in range(self.simulation_num):
-            self._simulate(color)
+            winner = self._simulate(color)
+            if winner == 1:
+                black_wins += 1
+            elif winner == -1:
+                white_wins += 1
+            else:
+                draws += 1
         if verbose:
+          print('results:', 'black wins', black_wins, 'white wins', white_wins, 'draws', draws)
           print('root:', self.root.get_visit_count())
           self.root.display()
           self.board.display()
