@@ -9,19 +9,21 @@
 import pickle
 import numpy as np
 import os
+from tqdm import tqdm
 
 checkpoint_file = os.path.join('checkpoint', 'best_checkpoit.h5')
 data_file = os.path.join('checkpoint', 'train_data.pkl')
 
 class Train:
-  def __init__(self, board, ai, net, iterations=100, iteration_epochs=100, data_limit=2000, load_checkpoint=False):
+  def __init__(self, board, ai, net, iterations=100, iteration_epochs=100, train_data_limit=2000, load_checkpoint=False, temp_threshold=30):
     self.board = board
     self.ai = ai
     self.net = net
     self.iterations = iterations
     self.iteration_epochs = iteration_epochs
-    self.data_limit = data_limit
+    self.data_limit = train_data_limit
     self.load_checkpoint = load_checkpoint
+    self.temp_threshold = temp_threshold
 
   def start(self):
     if self.load_checkpoint:
@@ -35,6 +37,7 @@ class Train:
       print(f"Starting iteration {iteration + 1}/{self.iterations}...")
       iteration_data = self._run_iteration()
       train_data.extend(iteration_data)
+      print('train_data length:', len(train_data))
 
       # If the training data exceeds the limit, remove the oldest data.
       if len(train_data) > self.data_limit:
@@ -54,24 +57,23 @@ class Train:
   def _run_iteration(self):
     iteration_data = []
 
-    for epoch in range(self.iteration_epochs):
-      print(f"Starting epoch {epoch + 1}/{self.iteration_epochs}...")
+    for epoch in tqdm(range(self.iteration_epochs), desc="Self Play"):
       board = self.board.copy()
+
+      epoch_steps = 0
 
       self.ai.set_board(board)
 
       epoch_data = []
       while not board.is_game_over():
-        action = self.ai.move()
+        action = self.ai.move(temp=int(epoch_steps < self.temp_threshold))
         x, y = board.get_data(action)
         epoch_data.append((x, y))
         board.move(action)
-        print('move:', action)
-        board.display()
+        epoch_steps += 1
 
       winner = board.get_winner()
       for data in epoch_data:
         iteration_data.append([data[0], winner, data[1][1]])
-      print(f"Finished epoch {epoch + 1}/{self.iteration_epochs}.")
 
     return iteration_data

@@ -36,7 +36,8 @@ class Node:
     for action in range(0, len(action_priors)):
       prob = action_priors[action]
       if action not in self.children:
-        self.children[action] = Node(parent=self, P=prob, Q=v)
+        if prob > 0:
+          self.children[action] = Node(parent=self, P=prob, Q=v)
 
   def update(self, value):
     self.N += 1
@@ -48,12 +49,13 @@ class Node:
     self.update(value)
 
 class MCTS:
-  def __init__(self, board, net, simulation_num=1600):
+  def __init__(self, board, net, simulation_num=1000, self_play=False):
     self.root = Node(None)
     self.board = board
     self.net = net
     self.simulation_num = simulation_num
     self.c_puct = c_puct
+    self.self_play = self_play
 
   def _simulate(self, color):
     node = self.root
@@ -77,13 +79,19 @@ class MCTS:
       action_probs = action_probs[0] * self.board.get_valid_moves_mask()
       v = v[0][0]
       # print('expand', action_probs[0], v[0][0])
+      # 顶层节点使用 dirichlet 噪声
+      if self.self_play and node.parent == self.root:
+        action_probs = 0.75*action_probs + 0.25 * np.random.dirichlet(0.03*np.ones(len(action_probs)))
+      else:
+        print('no dirichlet')
       node.expand(action_probs, v)
       q = v
+
 
     node.update_recursive(-q if color == 1 else q)
     return q
 
-  def move(self, color=None, verbose=False):
+  def move(self, color=None, verbose=False, temp=1):
     self.root = Node()  # reset the root node
     if color is None:
       color = self.board.get_current_player_color()
@@ -102,10 +110,18 @@ class MCTS:
     if verbose:
       print('results:', 'black wins', black_wins, 'white wins', white_wins, 'draws', draws)
       print('root:', self.root.get_visit_count())
-      self.root.display()
       self.board.display()
-    action = max(self.root.children.items(), key=lambda act_node: act_node[1].N)[0]
-    return action
+    
+    # 选最优解
+    if temp == 0:
+      action = max(self.root.children.items(), key=lambda act_node: act_node[1].N)[0]
+      return action
+    
+    action_probs = np.zeros(self.board.size * self.board.size)
+    for action, node in self.root.children.items():
+      action_probs[action] = node.N ** (1 / temp)
+    action_probs /= np.sum(action_probs)
+    return np.random.choice(np.arange(len(action_probs)), p=action_probs)
 
   def set_board(self, board):
     self.board = board

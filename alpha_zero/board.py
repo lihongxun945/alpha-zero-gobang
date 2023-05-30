@@ -98,7 +98,7 @@ class Board:
 
   def get_valid_moves_mask(self):
     """返回所有合法的移动位置，用0表示不合法，1表示合法"""
-    valid_moves = np.zeros(self.size * self.size, dtype=np.int)
+    valid_moves = np.zeros(self.size * self.size, dtype=int)
     for position in range(self.size * self.size):
       x, y = self.position_to_coordinate(position)
       if self.board[x][y] == 0:  # 未被占据的位置
