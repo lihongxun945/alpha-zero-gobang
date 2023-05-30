@@ -118,7 +118,7 @@ class Board:
     col = position % self.size
     return row, col
 
-  def get_data(self, next_action):
+  def get_data(self, next_action = None):
     x = np.zeros((17, self.size, self.size), dtype=np.int8)
     # 填充棋盘状态
     history_len = len(self.history)
@@ -137,6 +137,9 @@ class Board:
 
     # 最后一个平面表示当前轮到哪一方落子
     x[-1, :, :] = self.current_player  # 全部的值都是当前角色
+
+    if next_action is None:
+      return x
 
     v = self.get_winner()  # 胜负情况
 
