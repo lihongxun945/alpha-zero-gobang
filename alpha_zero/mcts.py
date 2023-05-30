@@ -82,8 +82,6 @@ class MCTS:
       # 顶层节点使用 dirichlet 噪声
       if self.self_play and node.parent == self.root:
         action_probs = 0.75*action_probs + 0.25 * np.random.dirichlet(0.03*np.ones(len(action_probs)))
-      else:
-        print('no dirichlet')
       node.expand(action_probs, v)
       q = v
 
