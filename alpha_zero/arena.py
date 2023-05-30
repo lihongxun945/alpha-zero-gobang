@@ -6,26 +6,27 @@
 其中AI实例有一个方法move，返回AI的落子位置
 '''
 
-class Arena:
-    def __init__(self, board, ai1, ai2, size=15):
-        self.board = board
-        self.ai1 = ai1
-        self.ai2 = ai2
 
-    def start(self):
-        while self.board.get_winner() == 0:
-            if self.board.get_current_player_color() == 1:
-                move = self.ai1.move()
-                self.board.move(move)
-                print("AI 1 moved to position", move)
-            else:
-                move = self.ai2.move()
-                self.board.move(move)
-                print("AI 2 moved to position", move)
-            self.board.display()
-        winner_color = self.board.get_winner()
-        if winner_color == 1:
-            print("AI 1 wins!")
-        else:
-            print("AI 2 wins!")
-        return winner_color
+class Arena:
+  def __init__(self, board, ai1, ai2, size=15):
+    self.board = board
+    self.ai1 = ai1
+    self.ai2 = ai2
+
+  def start(self):
+    while self.board.get_winner() == 0:
+      if self.board.get_current_player_color() == 1:
+        move = self.ai1.move()
+        self.board.move(move)
+        print("AI 1 moved to position", move)
+      else:
+        move = self.ai2.move()
+        self.board.move(move)
+        print("AI 2 moved to position", move)
+      self.board.display()
+    winner_color = self.board.get_winner()
+    if winner_color == 1:
+      print("AI 1 wins!")
+    else:
+      print("AI 2 wins!")
+    return winner_color

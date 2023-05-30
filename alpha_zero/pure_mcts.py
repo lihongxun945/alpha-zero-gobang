@@ -10,97 +10,100 @@ import random
 import math
 from collections import defaultdict
 
+
 class Node:
-    def __init__(self, parent=None):
-        self.parent = parent
-        self.children = dict()  # {move: Node}
-        self.visit_count = 1
-        self.q_value = 0.0
+  def __init__(self, parent=None):
+    self.parent = parent
+    self.children = dict()  # {move: Node}
+    self.visit_count = 1
+    self.q_value = 0.0
 
-    def is_leaf(self):
-        return len(self.children) == 0
+  def is_leaf(self):
+    return len(self.children) == 0
 
-    def is_root(self):
-        return self.parent is None
+  def is_root(self):
+    return self.parent is None
 
-    def get_value(self):
-        return self.q_value / self.visit_count
+  def get_value(self):
+    return self.q_value / self.visit_count
 
-    def expand(self, action_priors):
-        for action, _ in action_priors:
-            if action not in self.children:
-                self.children[action] = Node(parent=self)
+  def expand(self, action_priors):
+    for action, _ in action_priors:
+      if action not in self.children:
+        self.children[action] = Node(parent=self)
 
-    def select(self, simulate_count):
-        return max(self.children.items(), key=lambda node: node[1].get_value() + math.sqrt(math.log(simulate_count) / node[1].visit_count))
+  def select(self, simulate_count):
+    return max(self.children.items(),
+               key=lambda node: node[1].get_value() + math.sqrt(math.log(simulate_count) / node[1].visit_count))
 
-    def update(self, reward):
-        self.visit_count += 1
-        self.q_value += reward
+  def update(self, reward):
+    self.visit_count += 1
+    self.q_value += reward
 
-    def update_recursive(self, reward):
-        self.update(reward)
-        if not self.is_root():
-            self.parent.update_recursive(-reward)
+  def update_recursive(self, reward):
+    self.update(reward)
+    if not self.is_root():
+      self.parent.update_recursive(-reward)
 
-    def display(self):
-        for action, node in self.children.items():
-            print(f"Action: {action}, Value: {node.q_value}, Visit Count: {node.visit_count}")
+  def display(self):
+    for action, node in self.children.items():
+      print(f"Action: {action}, Value: {node.q_value}, Visit Count: {node.visit_count}")
 
-    def display_tree(self, depth=0, action=-1):
-        print('  ' * depth + f'Node: {action} Visit count: {self.visit_count}')
-        for action, node in self.children.items():
-            node.display_tree(depth + 1, action)
+  def display_tree(self, depth=0, action=-1):
+    print('  ' * depth + f'Node: {action} Visit count: {self.visit_count}')
+    for action, node in self.children.items():
+      node.display_tree(depth + 1, action)
 
-    def get_visit_count(self):
-        return self.visit_count 
+  def get_visit_count(self):
+    return self.visit_count
+
 
 class PureMCTS:
-    def __init__(self, board, simulation_num=1000):
-        self.root = Node()
-        self.board = board
-        self.simulation_num = simulation_num
+  def __init__(self, board, simulation_num=1000):
+    self.root = Node()
+    self.board = board
+    self.simulation_num = simulation_num
 
-    def _simulate(self, color=None):
-        board_copy = self.board.copy()
-        node = self.root
-        if color is None:
-          color = board_copy.get_current_player_color()
+  def _simulate(self, color=None):
+    board_copy = self.board.copy()
+    node = self.root
+    if color is None:
+      color = board_copy.get_current_player_color()
 
-        while board_copy.get_winner() == 0:
-            valid_moves = board_copy.get_valid_moves()
-            if len(valid_moves) == 0:
-                break
-            if node.is_leaf():
-                node.expand([(move, 1.0) for move in valid_moves])
-            move, node = node.select(node.visit_count)
-            board_copy.move(move, color)
-            color = -color
+    while board_copy.get_winner() == 0:
+      valid_moves = board_copy.get_valid_moves()
+      if len(valid_moves) == 0:
+        break
+      if node.is_leaf():
+        node.expand([(move, 1.0) for move in valid_moves])
+      move, node = node.select(node.visit_count)
+      board_copy.move(move, color)
+      color = -color
 
-        winner = board_copy.get_winner()
-        node.update_recursive(-winner if color == 1 else winner)
-        return winner
+    winner = board_copy.get_winner()
+    node.update_recursive(-winner if color == 1 else winner)
+    return winner
 
-    def move(self, color=None, verbose=False):
-        self.root = Node() # reset the root node
-        if color is None:
-            color = self.board.get_current_player_color()
+  def move(self, color=None, verbose=False):
+    self.root = Node()  # reset the root node
+    if color is None:
+      color = self.board.get_current_player_color()
 
-        black_wins = 0
-        white_wins = 0
-        draws = 0
-        for _ in range(self.simulation_num):
-            winner = self._simulate(color)
-            if winner == 1:
-                black_wins += 1
-            elif winner == -1:
-                white_wins += 1
-            else:
-                draws += 1
-        if verbose:
-          print('results:', 'black wins', black_wins, 'white wins', white_wins, 'draws', draws)
-          print('root:', self.root.get_visit_count())
-          self.root.display()
-          self.board.display()
-        move = max(self.root.children.items(), key=lambda node: node[1].get_visit_count())
-        return move[0]
+    black_wins = 0
+    white_wins = 0
+    draws = 0
+    for _ in range(self.simulation_num):
+      winner = self._simulate(color)
+      if winner == 1:
+        black_wins += 1
+      elif winner == -1:
+        white_wins += 1
+      else:
+        draws += 1
+    if verbose:
+      print('results:', 'black wins', black_wins, 'white wins', white_wins, 'draws', draws)
+      print('root:', self.root.get_visit_count())
+      self.root.display()
+      self.board.display()
+    move = max(self.root.children.items(), key=lambda node: node[1].get_visit_count())
+    return move[0]
