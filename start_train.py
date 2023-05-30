@@ -5,9 +5,9 @@ from alpha_zero.mcts import MCTS
 from alpha_zero.train import Train
 
 # 训练参数
-board_size = 6 # 棋盘大小
+board_size = 8 # 棋盘大小
 iterations = 100 #  训练多少轮
-iteration_epochs = 2 # 每一轮进行多少次对局
+iteration_epochs = 20 # 每一轮进行多少次对局
 simulation_num = 100 # 蒙特卡洛模拟次数
 load_checkpoint = False # 是否加载checkpoint和训练数据
 

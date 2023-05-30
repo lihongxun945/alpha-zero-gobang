@@ -44,7 +44,11 @@ class Net:
                        metrics={'policy_output': 'accuracy', 'value_output': 'mse'})
 
   def predict(self, state):
-    return self.model.predict(state)
+    pi, v = self.model(state, training=False)
+
+    # print('PREDICTION TIME TAKEN : {0:03f}'.format(time.time()-start))
+    # print(self.model.predict(state))
+    return pi.numpy(), v.numpy()
 
   def train(self, x, v, pi):
     return self.model.fit(x, {'policy_output': pi, 'value_output': v}, epochs=epochs)

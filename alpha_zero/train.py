@@ -66,6 +66,7 @@ class Train:
         x, y = board.get_data(action)
         epoch_data.append((x, y))
         board.move(action)
+        print('move:', action)
         board.display()
 
       winner = board.get_winner()

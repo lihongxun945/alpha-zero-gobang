@@ -14,16 +14,16 @@ import numpy as np
 c_puct = 1
 
 class Node:
-  def __init__(self, parent, P=0, Q=0):
+  def __init__(self, parent=None, P=0, Q=0):
     self.N = 1  # visit count
     self.Q = Q  # mean action value
     self.P = P  # prior probability
 
     self.parent = parent
-    self.children = {}
+    self.children = dict()
 
   def is_leaf(self):
-    return self.children == {}
+    return len(self.children) == 0
 
   def is_root(self):
     return self.parent is None
@@ -36,7 +36,7 @@ class Node:
     for action in range(0, len(action_priors)):
       prob = action_priors[action]
       if action not in self.children:
-        self.children[action] = Node(self, P=prob, Q=v)
+        self.children[action] = Node(parent=self, P=prob, Q=v)
 
   def update(self, value):
     self.N += 1
@@ -55,39 +55,57 @@ class MCTS:
     self.simulation_num = simulation_num
     self.c_puct = c_puct
 
-  def _simulate(self):
+  def _simulate(self, color):
     node = self.root
     board_copy = self.board.copy()
+    if color is None:
+      color = board_copy.get_current_player_color()
 
-    while True:
-      if node.is_leaf():
-        if board_copy.is_game_over():
-          break
-        train_data = board_copy.get_data()
-        train_data = np.expand_dims(train_data, axis=0)  # 转换为四维张量，因为模型需要 batch 维度
-        action_probs, v = self.net.predict(train_data)
-        node.expand(action_probs[0], v[0][0])
+    q = None
+    while not node.is_leaf():
       action, node = node.select(self.c_puct)
-      board_copy.move(action)
+      # print('select', action, node)
+      board_copy.move(action, color)
+      color = -color
 
-    return board_copy.get_winner()
-
-  def _backpropagate(self, leaf_value):
-    self.root.update_recursive(-leaf_value)
-
-  def move(self, color=None):
-    for _ in range(self.simulation_num):
-      leaf_value = self._simulate()
-      self._backpropagate(leaf_value)
-
-    return max(self.root.children.items(), key=lambda act_node: act_node[1].N)[0]
-
-  def update_with_move(self, last_move):
-    if last_move in self.root.children:
-      self.root = self.root.children[last_move]
-      self.root.parent = None
+    if board_copy.is_game_over():
+      q = board_copy.get_winner()
     else:
-      self.root = Node(None)
+      train_data = board_copy.get_data()
+      train_data = np.expand_dims(train_data, axis=0)  # 转换为四维张量，因为模型需要 batch 维度
+      action_probs, v = self.net.predict(train_data)
+      action_probs = action_probs[0] * self.board.get_valid_moves_mask()
+      v = v[0][0]
+      # print('expand', action_probs[0], v[0][0])
+      node.expand(action_probs, v)
+      q = v
+
+    node.update_recursive(-q if color == 1 else q)
+    return q
+
+  def move(self, color=None, verbose=False):
+    self.root = Node()  # reset the root node
+    if color is None:
+      color = self.board.get_current_player_color()
+
+    black_wins = 0
+    white_wins = 0
+    draws = 0
+    for _ in range(self.simulation_num):
+      winner = self._simulate(color)
+      if winner == 1:
+        black_wins += 1
+      elif winner == -1:
+        white_wins += 1
+      else:
+        draws += 1
+    if verbose:
+      print('results:', 'black wins', black_wins, 'white wins', white_wins, 'draws', draws)
+      print('root:', self.root.get_visit_count())
+      self.root.display()
+      self.board.display()
+    action = max(self.root.children.items(), key=lambda act_node: act_node[1].N)[0]
+    return action
 
   def set_board(self, board):
     self.board = board

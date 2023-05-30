@@ -92,8 +92,18 @@ class Board:
           print(" X ", end="")
       print()
 
+  # 返回所有合法的位置，不合法的不返回
   def get_valid_moves(self):
     return [i for i in range(self.size * self.size) if self.board[i // self.size][i % self.size] == 0]
+
+  def get_valid_moves_mask(self):
+    """返回所有合法的移动位置，用0表示不合法，1表示合法"""
+    valid_moves = np.zeros(self.size * self.size, dtype=np.int)
+    for position in range(self.size * self.size):
+      x, y = self.position_to_coordinate(position)
+      if self.board[x][y] == 0:  # 未被占据的位置
+        valid_moves[position] = 1
+    return valid_moves
 
   def get_current_player_color(self):
     return self.current_player
