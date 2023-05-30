@@ -69,7 +69,7 @@ class TestPureMCTS(unittest.TestCase):
       mcts = PureMCTS(board, 5000)  # Initialize a MCTS with 100 simulations
       for move in moves:
         board.move(move)
-      m = mcts.move(None, True)
+      m = mcts.move(None, False)
       print('check actions: ', m, 'in', actions)
       self.assertTrue(m in actions)
 

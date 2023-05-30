@@ -10,52 +10,47 @@
 '''
 
 import tensorflow as tf
-from tensorflow.keras import Model
-from tensorflow.keras.layers import Input, Conv2D, BatchNormalization, Activation, Add, Flatten, Dense
-from tensorflow.keras.applications.resnet50 import ResNet50
+from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, Reshape
+from tensorflow.keras.applications import ResNet50
+from tensorflow.keras.optimizers import Adam
 
+lr = 0.001
+epochs = 20
 
 class Net:
-  def __init__(self, board_size=15):
-    self.board_size = board_size
-    self.model = self.build_model()
+  def __init__(self, size=15):
+    self.size = size
+    self.build_model()
 
   def build_model(self):
-    base_model = ResNet50(weights=None, include_top=False, input_shape=(self.board_size, self.board_size, 17))
+    inp = Input((17, self.size, self.size))
+
+    # 首先将输入转换为 ResNet50 需要的形状 (size, size, 3)
+    # x = Conv2D(3, (1, 1))(inp)  # 使用 1x1 卷积增加通道数，这不会改变空间维度
+    # x = Reshape((self.size, self.size, 3))(x)  # 将形状转换为 ResNet50 需要的 (size, size, 3)
+
+    base_model = ResNet50(include_top=False, weights=None, input_tensor=inp)
 
     x = base_model.output
-    x = Conv2D(filters=2, kernel_size=(1, 1))(x)
-    x = BatchNormalization()(x)
-    x = Activation('relu')(x)
+    x = Flatten()(x)
 
-    # Policy Head
-    policy_head = Conv2D(filters=2, kernel_size=(1, 1))(x)
-    policy_head = BatchNormalization()(policy_head)
-    policy_head = Activation('relu')(policy_head)
-    policy_head = Flatten()(policy_head)
-    policy_head = Dense(self.board_size * self.board_size, activation='softmax', name='policy')(policy_head)
+    # 添加两个输出层
+    policy_output = Dense(self.size * self.size, activation='softmax', name='policy_output')(x)
+    value_output = Dense(1, activation='tanh', name='value_output')(x)
 
-    # Value Head
-    value_head = Conv2D(filters=1, kernel_size=(1, 1))(x)
-    value_head = BatchNormalization()(value_head)
-    value_head = Activation('relu')(value_head)
-    value_head = Flatten()(value_head)
-    value_head = Dense(256, activation='relu')(value_head)
-    value_head = Dense(1, activation='tanh', name='value')(value_head)
+    self.model = tf.keras.models.Model(inputs=base_model.input, outputs=[policy_output, value_output])
+    self.model.compile(loss={'policy_output': 'categorical_crossentropy', 'value_output': 'mse'},
+                       optimizer=Adam(lr),
+                       metrics={'policy_output': 'accuracy', 'value_output': 'mse'})
 
-    model = Model(inputs=base_model.input, outputs=[policy_head, value_head])
-    model.compile(loss={'policy': 'categorical_crossentropy', 'value': 'mean_squared_error'},
-                  optimizer='adam', metrics=['accuracy'])
+  def predict(self, state):
+    return self.model.predict(state)
 
-    return model
+  def train(self, x, v, pi):
+    return self.model.fit(x, {'policy_output': pi, 'value_output': v}, epochs=epochs)
 
-  def predict(self, board_state):
-    board_state = board_state.reshape(-1, self.board_size, self.board_size, 17)
-    policy, value = self.model.predict(board_state)
-    return policy[0], value[0][0]
+  def save(self, filepath):
+    self.model.save_weights(filepath)
 
-  def train(self, x_train, y_train, batch_size=256, epochs=10):
-    self.model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs)
-
-  def save(self, path):
-    self.model.save_weights(path)
+  def load(self, filepath):
+    self.model.load_weights(filepath)

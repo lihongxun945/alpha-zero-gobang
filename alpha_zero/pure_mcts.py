@@ -107,3 +107,6 @@ class PureMCTS:
       self.board.display()
     move = max(self.root.children.items(), key=lambda node: node[1].get_visit_count())
     return move[0]
+
+  def set_board(self, board):
+    self.board = board

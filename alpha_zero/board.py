@@ -147,3 +147,6 @@ class Board:
     y = [v, pi]
 
     return x, y
+
+  def is_game_over(self):
+    return self.get_winner() !=0 or len(self.get_valid_moves()) == 0
