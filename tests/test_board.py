@@ -48,13 +48,27 @@ class TestBoard(unittest.TestCase):
     board.display()
 
   def test_get_valid_moves(self):
-    board = Board(size=5, first_player=1)
+    board = Board(size=3, first_player=1)
     board.move(0)
-    board.move(12)
+    board.move(8)
     valid_moves = board.get_valid_moves()
-    self.assertTrue(0 not in valid_moves)
-    self.assertTrue(1 in valid_moves)
-    self.assertTrue(12 not in valid_moves)
+    self.assertTrue(np.all(valid_moves == np.array([1, 2, 3, 4, 5, 6, 7])))
+    valid_moves_mask = board.get_valid_moves_mask()
+    self.assertTrue(np.all(valid_moves_mask == np.array([0, 1, 1, 1, 1, 1, 1, 1, 0])))
+
+    # 测试如果能连五，那么只返回连五的位置
+    board = Board(size=5, first_player=1)
+    for i in [0, 1, 2, 3]:
+      board.move(i, 1)
+      board.move(i + 5, -1)
+    valid_moves = board.get_valid_moves()
+    self.assertTrue(np.all(valid_moves == np.array([4, 9])))
+    valid_moves_mask = board.get_valid_moves_mask()
+    mask = np.zeros(25)
+    mask[4] = 1
+    mask[9] = 1
+    self.assertTrue(np.all(valid_moves_mask == np.array(mask)))
+
 
   def test_get_board_string(self):
     board = Board(size=5, first_player=1)

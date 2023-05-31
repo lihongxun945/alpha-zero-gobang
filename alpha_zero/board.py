@@ -92,18 +92,34 @@ class Board:
           print(" X ", end="")
       print()
 
-  # 返回所有合法的位置，不合法的不返回
+  # 返回所有合法的位置，不合法的不返回，这里是没有考虑五子棋的知识的
+  #def get_valid_moves(self):
+  #  return [i for i in range(self.size * self.size) if self.board[i // self.size][i % self.size] == 0]
+
+  # 返回所有合法的位置
+  # 这里增加了五子棋的一点点知识，如果当前有能连成五子的棋子，那么只返回这些位置（黑棋白棋都包括）
+  # 还可以在这里增加更多的知识，以提高训练的效率
   def get_valid_moves(self):
-    return [i for i in range(self.size * self.size) if self.board[i // self.size][i % self.size] == 0]
+    valid_moves = []
+    winning_moves = []
+    for row in range(self.size):
+        for col in range(self.size):
+            if self.board[row][col] == 0:
+                # 尝试下一个黑子，看看能不能连成五子
+                for player in [-1, 1]:
+                    self.move(row*self.size + col, player)
+                    if self.get_winner() == player:
+                        winning_moves.append(row*self.size + col)
+                    self.undo()
+                valid_moves.append(row*self.size + col)
+    return winning_moves if winning_moves else valid_moves
 
   def get_valid_moves_mask(self):
-    """返回所有合法的移动位置，用0表示不合法，1表示合法"""
-    valid_moves = np.zeros(self.size * self.size, dtype=int)
-    for position in range(self.size * self.size):
-      x, y = self.position_to_coordinate(position)
-      if self.board[x][y] == 0:  # 未被占据的位置
-        valid_moves[position] = 1
-    return valid_moves
+    mask = np.zeros(self.size * self.size, dtype=np.int8)
+    valid_moves = self.get_valid_moves()
+    for move in valid_moves:
+        mask[move] = 1
+    return mask
 
   def get_current_player_color(self):
     return self.current_player
