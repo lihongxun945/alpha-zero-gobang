@@ -11,7 +11,7 @@ iterations = 100 #  训练多少轮
 iteration_epochs = 50 # 每一轮进行多少次对局
 simulation_num = 400 # 蒙特卡洛模拟次数
 load_checkpoint = False # 是否加载checkpoint和训练数据
-train_data_limit = 2000 # 训练数据最大长度
+train_data_limit = 200000 # 训练数据最大长度
 
 gpu = True # 启用GPU加速
 

@@ -60,6 +60,9 @@ class Train:
   def _run_iteration(self):
     iteration_data = []
 
+    black_wins = 0
+    white_wins = 0
+    draws = 0
     for epoch in tqdm(range(self.iteration_epochs), desc="Self Play"):
       board = self.board.copy()
 
@@ -76,7 +79,16 @@ class Train:
         epoch_steps += 1
 
       winner = board.get_winner()
+      if winner == 1:
+          black_wins += 1
+      elif winner == -1:
+          white_wins += 1
+      else:
+          draws += 1
+      print('#step ', epoch_steps, 'winner', winner)
+      board.display()
       for data in epoch_data:
         iteration_data.append([data[0], winner, data[1][1]])
+    print('summary: black wins', black_wins, 'white wins', white_wins, 'draws', draws)
 
     return iteration_data
