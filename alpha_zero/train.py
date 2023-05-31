@@ -11,7 +11,7 @@ import numpy as np
 import os
 from tqdm import tqdm
 
-checkpoint_file = os.path.join('checkpoint', 'best_checkpoit.h5')
+checkpoint_file = os.path.join('checkpoint', 'best_checkpoint.h5')
 data_file = os.path.join('checkpoint', 'train_data.pkl')
 
 class Train:
@@ -49,7 +49,7 @@ class Train:
 
       print("Saving checkpoint...")
       self.net.save(checkpoint_file)
-      with open(data_file, 'wb') as f:
+      with open(data_file, 'wb+') as f:
         pickle.dump(train_data, f)
 
       print(f"Finished iteration {iteration + 1}/{self.iterations}.")
