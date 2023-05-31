@@ -108,6 +108,29 @@ class TestBoard(unittest.TestCase):
     self.assertEqual(y[0], 0)  # 胜负情况应为 0，因为游戏还没结束
     self.assertTrue(np.all(y[1] == np.array([0, 0, 0, 0, 0, 0, 0, 1, 0])))  # 最后一步的落子概率应为 1，其他位置的概率应为 0
 
+  def test_enhance_data(self):
+    board = Board(size=3)
+    board.move(0)  # 黑子下在 (0,0)
+    board.move(2)  # 黑子下在 (0,0)
+    board.move(3)  # 黑子下在 (0,0)
+    x, y = board.get_data(6)
+    data_original, data_horizontal_flip, data_vertical_flip = board.enhance_data(x, y)
+    print('test enhance', data_original, data_horizontal_flip, data_vertical_flip)
+
+    # 分开比较 y 的两个元素
+    np.testing.assert_almost_equal(y[0], data_original[1][0])
+    np.testing.assert_array_almost_equal(y[1], data_original[1][1])
+    
+    # 同样地，对水平翻转和垂直翻转后的数据进行比较
+    np.testing.assert_almost_equal(y[0], data_horizontal_flip[1][0])
+    np.testing.assert_array_almost_equal(np.flip(y[1].reshape(board.size, board.size), axis=1).flatten(), 
+                                          data_horizontal_flip[1][1])
+    
+    np.testing.assert_almost_equal(y[0], data_vertical_flip[1][0])
+    np.testing.assert_array_almost_equal(np.flip(y[1].reshape(board.size, board.size), axis=0).flatten(), 
+                                          data_vertical_flip[1][1])
+
+
 
 if __name__ == "__main__":
   unittest.main()

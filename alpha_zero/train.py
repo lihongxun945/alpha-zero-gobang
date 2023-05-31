@@ -74,7 +74,7 @@ class Train:
       while not board.is_game_over():
         action = self.ai.move(temp=int(epoch_steps < self.temp_threshold))
         x, y = board.get_data(action)
-        epoch_data.append((x, y))
+        epoch_data.extend(board.enhance_data(x, y))
         board.move(action)
         epoch_steps += 1
 

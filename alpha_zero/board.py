@@ -107,10 +107,10 @@ class Board:
             if self.board[row][col] == 0:
                 # 尝试下一个黑子，看看能不能连成五子
                 for player in [-1, 1]:
-                    self.move(row*self.size + col, player)
+                    self.board[row][col] = player # 不要调用self.move ，因为这里颜色不对，可能会导致混乱
                     if self.get_winner() == player:
                         winning_moves.append(row*self.size + col)
-                    self.undo()
+                    self.board[row][col] = 0
                 valid_moves.append(row*self.size + col)
     return winning_moves if winning_moves else valid_moves
 
@@ -237,3 +237,18 @@ class Board:
 
   def is_game_over(self):
     return self.get_winner() !=0 or len(self.get_valid_moves()) == 0
+
+  # 数据增强，进行水平和垂直翻转
+  def enhance_data(self, x, y):
+    # 原始数据
+    data_original = (x, y)
+    # 水平翻转数据
+    x_flip_horizontal = np.flip(x, 2)
+    y_flip_horizontal = [y[0], np.flip(y[1].reshape(self.size, self.size), 1).flatten()]
+    data_flip_horizontal = (x_flip_horizontal, y_flip_horizontal)
+    # 垂直翻转数据
+    x_flip_vertical = np.flip(x, 1)
+    y_flip_vertical = [y[0], np.flip(y[1].reshape(self.size, self.size), 0).flatten()]
+    data_flip_vertical = (x_flip_vertical, y_flip_vertical)
+    
+    return data_original, data_flip_horizontal, data_flip_vertical
