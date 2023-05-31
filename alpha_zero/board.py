@@ -128,28 +128,86 @@ class Board:
     col = position % self.size
     return row, col
 
-  def get_data(self, next_action = None):
+  def coordinate_to_position(self, coordinate):
+    """
+    将整数位置转换为二维坐标
+    """
+    return coordinate[0] * self.size + coordinate[1]
+
+  # def get_data(self, next_action = None):
+  #   x = np.zeros((17, self.size, self.size), dtype=np.int8)
+  #   # 填充棋盘状态
+  #   history_len = len(self.history)
+  #   for i in range(16):
+  #     if i < history_len:
+  #       # 获取历史状态
+  #       state = np.zeros((self.size, self.size), dtype=np.int8)
+  #       # 从history中获取每一次的落子，然后把它转换成棋盘状态
+  #       for j in range(history_len - i):
+  #         position, color = self.history[j]
+  #         row, col = self.position_to_coordinate(position)
+  #         state[row, col] = color
+
+  #       # 将每一次落子后的棋盘状态标记到x的前16个平面上
+  #       x[15 - i, :, :] = state
+
+  #   # 最后一个平面表示当前轮到哪一方落子
+  #   x[-1, :, :] = self.current_player  # 全部的值都是当前角色
+
+  #   if next_action is None:
+  #     return x
+
+  #   v = self.get_winner()  # 胜负情况
+
+  #   # 创建一个全零向量表示落子概率
+  #   pi = np.zeros(self.size * self.size)
+  #   pi[next_action] = 1
+
+  #   y = [v, pi]
+
+  #   return x, y
+
+  '''
+  AlphaZero 的神经网络输入表示由 17 个二值特征平面组成。这些特征平面表示了棋盘上的情况以及当前的游戏状态，包括当前玩家的棋子位置、对手的棋子位置以及其他游戏相关信息。具体来说，这 17 层可以被细分为：
+  前 8 层表示的是当前玩家在最近 8 步的棋子分布。每个平面中，如果在该步该玩家在某一格中有棋子，则该格的值为 1，否则为 0。
+  接下来的 8 层表示的是对手在最近 8 步的棋子分布。处理方式与前 8 层类似。
+  最后一层是一个标量特征平面，表示当前玩家的颜色（1表示黑棋，-1表示白棋）。
+  这 17 层的平面堆叠在一起，为神经网络提供了关于当前游戏状态的全面信息。神经网络通过这些输入来预测每一步的最佳动作和最终游戏结果。
+  '''
+  def get_data(self, next_action=None):
     x = np.zeros((17, self.size, self.size), dtype=np.int8)
     # 填充棋盘状态
     history_len = len(self.history)
-    for i in range(16):
-      if i < history_len:
-        # 获取历史状态
-        state = np.zeros((self.size, self.size), dtype=np.int8)
-        # 从history中获取每一次的落子，然后把它转换成棋盘状态
-        for j in range(history_len - i):
-          position, color = self.history[j]
-          row, col = self.position_to_coordinate(position)
-          state[row, col] = color
+    black_moves = [position for position, color in self.history if color == 1]
+    white_moves = [position for position, color in self.history if color == -1]
+    black_len = len(black_moves)
+    white_len = len(white_moves)
+    
+    # The recent 8 steps of black pieces
+    for i in range(8):
+        if i < black_len:
+            state = np.zeros((self.size, self.size), dtype=np.int8)
+            for j in range(black_len - i):
+                position = black_moves[j]
+                row, col = self.position_to_coordinate(position)
+                state[row, col] = 1
+            x[7 - i, :, :] = state
 
-        # 将每一次落子后的棋盘状态标记到x的前16个平面上
-        x[15 - i, :, :] = state
+    # The recent 8 steps of white pieces
+    for i in range(8):
+        if i < white_len:
+            state = np.zeros((self.size, self.size), dtype=np.int8)
+            for j in range(white_len - i):
+                position = white_moves[j]
+                row, col = self.position_to_coordinate(position)
+                state[row, col] = -1
+            x[15 - i, :, :] = state
 
     # 最后一个平面表示当前轮到哪一方落子
     x[-1, :, :] = self.current_player  # 全部的值都是当前角色
 
     if next_action is None:
-      return x
+        return x
 
     v = self.get_winner()  # 胜负情况
 

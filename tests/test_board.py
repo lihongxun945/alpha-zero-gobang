@@ -69,6 +69,7 @@ class TestBoard(unittest.TestCase):
     board.move(0, 1)  # 黑子下在 (0,0)
     board.move(4, -1)  # 白子下在 (1,1)
     board.move(8, 1)  # 黑子下在 (2,2)
+    board.move(7, -1)  # 白子下在 (2,1)
 
     x, y = board.get_data(7)
 
@@ -76,16 +77,18 @@ class TestBoard(unittest.TestCase):
     self.assertEqual(x.shape, (17, 3, 3))  # x 的形状应为 (3, 3, 17)
 
     # 验证历史棋盘状态
-    for i in range(13):
+    # 这几个平面应全为 0
+    for i in [0, 1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13]:
       self.assertTrue(np.all(x[i, :, :] == 0))  # 前14个平面应全为 0
 
-    # 验证最后2个棋盘状态
-    self.assertTrue(np.all(x[13, :, :] == np.array([[1, 0, 0], [0, 0, 0], [0, 0, 0]])))  # 倒数第二步的棋盘状态
-    self.assertTrue(np.all(x[14, :, :] == np.array([[1, 0, 0], [0, -1, 0], [0, 0, 0]])))  # 倒数第二步的棋盘状态
-    self.assertTrue(np.all(x[15, :, :] == np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]])))  # 倒数第一步的棋盘状态
+    # 验证有棋子的状态
+    self.assertTrue(np.all(x[6, :, :] == np.array([[1, 0, 0], [0, 0, 0], [0, 0, 0]])))
+    self.assertTrue(np.all(x[7, :, :] == np.array([[1, 0, 0], [0, 0, 0], [0, 0, 1]])))
+    self.assertTrue(np.all(x[14, :, :] == np.array([[0, 0, 0], [0, -1, 0], [0, 0, 0]])))
+    self.assertTrue(np.all(x[15, :, :] == np.array([[0, 0, 0], [0, -1, 0], [0, -1, 0]])))
 
     # 验证当前玩家颜色
-    self.assertTrue(np.all(x[16, :, :] == -1))  # 最后一个平面应全为 1，因为该白旗了
+    self.assertTrue(np.all(x[16, :, :] == 1))  # 最后一个平面应全为 1，因为该黑棋了
 
     # 验证胜负情况和落子概率
     self.assertEqual(y[0], 0)  # 胜负情况应为 0，因为游戏还没结束
