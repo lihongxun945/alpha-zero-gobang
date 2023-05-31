@@ -11,8 +11,9 @@ import numpy as np
 import os
 from tqdm import tqdm
 
-checkpoint_file = os.path.join('checkpoint', 'best_checkpoint.h5')
-data_file = os.path.join('checkpoint', 'train_data.pkl')
+checkpoint_dir = 'checkpoint'
+checkpoint_file = os.path.join(checkpoint_dir, 'best_checkpoint.h5')
+data_file = os.path.join(checkpoint_dir, 'train_data.pkl')
 
 class Train:
   def __init__(self, board, ai, net, iterations=100, iteration_epochs=100, train_data_limit=2000, load_checkpoint=False, temp_threshold=30):
@@ -26,6 +27,10 @@ class Train:
     self.temp_threshold = temp_threshold
 
   def start(self):
+    # 创建文件夹
+    if not os.path.exists(checkpoint_dir):
+      print("create checkpoint directory: {}".format(checkpoint_dir))
+      os.mkdir(checkpoint_dir)
     if self.load_checkpoint:
       self.net.load(checkpoint_file)
       with open(data_file, 'rb') as f:
@@ -51,8 +56,6 @@ class Train:
       self.net.save(checkpoint_file)
       with open(data_file, 'wb+') as f:
         pickle.dump(train_data, f)
-
-      print(f"Finished iteration {iteration + 1}/{self.iterations}.")
 
   def _run_iteration(self):
     iteration_data = []
