@@ -69,6 +69,14 @@ class TestBoard(unittest.TestCase):
     mask[9] = 1
     self.assertTrue(np.all(valid_moves_mask == np.array(mask)))
 
+    # 只返回周围有棋子的位置
+    board = Board(size=4, first_player=1)
+    board.move(0)
+    valid_moves = board.get_valid_moves()
+    print(valid_moves)
+    self.assertTrue(np.all(valid_moves == np.array([1, 2, 4, 5, 6, 8, 9, 10])))
+
+
 
   def test_get_board_string(self):
     board = Board(size=5, first_player=1)
@@ -115,7 +123,6 @@ class TestBoard(unittest.TestCase):
     board.move(3)  # 黑子下在 (0,0)
     x, y = board.get_data(6)
     data_original, data_horizontal_flip, data_vertical_flip = board.enhance_data(x, y)
-    print('test enhance', data_original, data_horizontal_flip, data_vertical_flip)
 
     # 分开比较 y 的两个元素
     np.testing.assert_almost_equal(y[0], data_original[1][0])

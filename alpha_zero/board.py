@@ -93,8 +93,8 @@ class Board:
       print()
 
   # 返回所有合法的位置，不合法的不返回，这里是没有考虑五子棋的知识的
-  #def get_valid_moves(self):
-  #  return [i for i in range(self.size * self.size) if self.board[i // self.size][i % self.size] == 0]
+  def get_valid_moves_free(self):
+    return [i for i in range(self.size * self.size) if self.board[i // self.size][i % self.size] == 0]
 
   # 返回所有合法的位置
   # 这里增加了五子棋的一点点知识，如果当前有能连成五子的棋子，那么只返回这些位置（黑棋白棋都包括）
@@ -103,15 +103,25 @@ class Board:
     valid_moves = []
     winning_moves = []
     for row in range(self.size):
-        for col in range(self.size):
-            if self.board[row][col] == 0:
-                # 尝试下一个黑子，看看能不能连成五子
-                for player in [-1, 1]:
-                    self.board[row][col] = player # 不要调用self.move ，因为这里颜色不对，可能会导致混乱
-                    if self.get_winner() == player:
-                        winning_moves.append(row*self.size + col)
-                    self.board[row][col] = 0
-                valid_moves.append(row*self.size + col)
+      for col in range(self.size):
+        if self.board[row][col] == 0:
+          # 检查这个位置周围是否有棋子
+          if len(self.history) >= 1:
+              has_adjacent_piece = False
+              for dr in [-2, -1, 0, 1, 2]:
+                  for dc in [-2, -1, 0, 1, 2]:
+                      if (0 <= row+dr < self.size) and (0 <= col+dc < self.size) and (self.board[row+dr][col+dc] != 0):
+                          has_adjacent_piece = True
+                          break
+              if not has_adjacent_piece:
+                  continue
+          # 尝试下一个黑子，看看能不能连成五子
+          for player in [-1, 1]:
+            self.board[row][col] = player # 不要调用self.move ，因为这里颜色不对，可能会导致混乱
+            if self.get_winner() == player:
+              winning_moves.append(row*self.size + col)
+            self.board[row][col] = 0
+          valid_moves.append(row*self.size + col)
     return winning_moves if winning_moves else valid_moves
 
   def get_valid_moves_mask(self):
