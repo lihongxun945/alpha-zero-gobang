@@ -4,9 +4,9 @@ Alpha Zero原理实现的五子棋AI，主要参考了Alpha Zero相关论文和g
 
 ## 如何运行
 
-第一步，安装依赖。因为tensorflow有较多依赖，为了避免冲突，建议先安装conda，然后创建一个新的环境 `conda create -n alphazero python=3.10` 
+第一步，安装依赖。因为tensorflow有较多依赖，为了避免冲突，建议先安装conda，然后创建一个新的环境 `conda create -n alphazero python=3.10`, 然后执行 `pip install -r requirements.txt`安装本项目的全部依赖.
 
-执行 `conda install tensorflow=2.9` 安装tensorflow以及相关依赖， 然后执行 `pip install -r requirements.txt`安装本项目的全部依赖.
+注意以后每次新打开项目都需要 `conda activate alphazero` 
 
 第二步，启动训练 `python start_train.py`.
 
@@ -49,6 +49,10 @@ TODO
 - [Mastering the game of Go without human knowledge](https://www.nature.com/articles/nature24270.epdf?author_access_token=VJXbVjaSHxFoctQQ4p2k4tRgN0jAjWel9jnR3ZoTv0PVW4gB86EEpGqTRDtpIz-2rmo8-KG06gqVobU5NSCFeHILHcVFUeMsbvwS-lxjqQGg98faovwjxeTUgZAUMnRQ)
 - [如何使用自对弈强化学习训练一个五子棋机器人Alpha Gobang Zero](https://www.cnblogs.com/zhiyiYo/p/14683450.html)
 - [A Simple Alpha(Go) Zero Tutorial](http://web.stanford.edu/~surag/posts/alphazero.html)
+
+## for 开发者
+
+- 更新依赖文件：如果引入了新的依赖，那么需要 `pipreqs ./` 来更新依赖文件
 
 ## 协议
 
