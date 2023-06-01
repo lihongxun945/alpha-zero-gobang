@@ -93,13 +93,13 @@ class Board:
       print()
 
   # 返回所有合法的位置，不合法的不返回，这里是没有考虑五子棋的知识的
-  def get_valid_moves_free(self):
+  def get_valid_moves(self):
     return [i for i in range(self.size * self.size) if self.board[i // self.size][i % self.size] == 0]
 
   # 返回所有合法的位置
   # 这里增加了五子棋的一点点知识，如果当前有能连成五子的棋子，那么只返回这些位置（黑棋白棋都包括）
   # 还可以在这里增加更多的知识，以提高训练的效率
-  def get_valid_moves(self):
+  def get_valid_moves_for_train(self):
     valid_moves = []
     winning_moves = []
     for row in range(self.size):
