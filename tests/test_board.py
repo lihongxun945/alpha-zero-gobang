@@ -127,15 +127,15 @@ class TestBoard(unittest.TestCase):
     # 分开比较 y 的两个元素
     np.testing.assert_almost_equal(y[0], data_original[1][0])
     np.testing.assert_array_almost_equal(y[1], data_original[1][1])
-    
+
     # 同样地，对水平翻转和垂直翻转后的数据进行比较
     np.testing.assert_almost_equal(y[0], data_horizontal_flip[1][0])
-    np.testing.assert_array_almost_equal(np.flip(y[1].reshape(board.size, board.size), axis=1).flatten(), 
-                                          data_horizontal_flip[1][1])
-    
+    np.testing.assert_array_almost_equal(np.flip(y[1].reshape(board.size, board.size), axis=1).flatten(),
+                                         data_horizontal_flip[1][1])
+
     np.testing.assert_almost_equal(y[0], data_vertical_flip[1][0])
-    np.testing.assert_array_almost_equal(np.flip(y[1].reshape(board.size, board.size), axis=0).flatten(), 
-                                          data_vertical_flip[1][1])
+    np.testing.assert_array_almost_equal(np.flip(y[1].reshape(board.size, board.size), axis=0).flatten(),
+                                         data_vertical_flip[1][1])
 
 
 

@@ -109,12 +109,12 @@ class MCTS:
       print('results:', 'black wins', black_wins, 'white wins', white_wins, 'draws', draws)
       print('root:', self.root.get_visit_count())
       self.board.display()
-    
+
     # 选最优解
     if temp == 0:
       action = max(self.root.children.items(), key=lambda act_node: act_node[1].N)[0]
       return action
-    
+
     action_probs = np.zeros(self.board.size * self.board.size)
     for action, node in self.root.children.items():
       action_probs[action] = node.N ** (1 / temp)

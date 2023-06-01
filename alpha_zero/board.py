@@ -107,14 +107,14 @@ class Board:
         if self.board[row][col] == 0:
           # 检查这个位置周围是否有棋子
           if len(self.history) >= 1:
-              has_adjacent_piece = False
-              for dr in [-2, -1, 0, 1, 2]:
-                  for dc in [-2, -1, 0, 1, 2]:
-                      if (0 <= row+dr < self.size) and (0 <= col+dc < self.size) and (self.board[row+dr][col+dc] != 0):
-                          has_adjacent_piece = True
-                          break
-              if not has_adjacent_piece:
-                  continue
+            has_adjacent_piece = False
+            for dr in [-2, -1, 0, 1, 2]:
+              for dc in [-2, -1, 0, 1, 2]:
+                if (0 <= row+dr < self.size) and (0 <= col+dc < self.size) and (self.board[row+dr][col+dc] != 0):
+                  has_adjacent_piece = True
+                  break
+            if not has_adjacent_piece:
+              continue
           # 尝试下一个黑子，看看能不能连成五子
           for player in [-1, 1]:
             self.board[row][col] = player # 不要调用self.move ，因为这里颜色不对，可能会导致混乱
@@ -128,7 +128,7 @@ class Board:
     mask = np.zeros(self.size * self.size, dtype=np.int8)
     valid_moves = self.get_valid_moves()
     for move in valid_moves:
-        mask[move] = 1
+      mask[move] = 1
     return mask
 
   def get_current_player_color(self):
@@ -208,32 +208,32 @@ class Board:
     white_moves = [position for position, color in self.history if color == -1]
     black_len = len(black_moves)
     white_len = len(white_moves)
-    
+
     # The recent 8 steps of black pieces
     for i in range(8):
-        if i < black_len:
-            state = np.zeros((self.size, self.size), dtype=np.int8)
-            for j in range(black_len - i):
-                position = black_moves[j]
-                row, col = self.position_to_coordinate(position)
-                state[row, col] = 1
-            x[7 - i, :, :] = state
+      if i < black_len:
+        state = np.zeros((self.size, self.size), dtype=np.int8)
+        for j in range(black_len - i):
+          position = black_moves[j]
+          row, col = self.position_to_coordinate(position)
+          state[row, col] = 1
+        x[7 - i, :, :] = state
 
     # The recent 8 steps of white pieces
     for i in range(8):
-        if i < white_len:
-            state = np.zeros((self.size, self.size), dtype=np.int8)
-            for j in range(white_len - i):
-                position = white_moves[j]
-                row, col = self.position_to_coordinate(position)
-                state[row, col] = -1
-            x[15 - i, :, :] = state
+      if i < white_len:
+        state = np.zeros((self.size, self.size), dtype=np.int8)
+        for j in range(white_len - i):
+          position = white_moves[j]
+          row, col = self.position_to_coordinate(position)
+          state[row, col] = -1
+        x[15 - i, :, :] = state
 
     # 最后一个平面表示当前轮到哪一方落子
     x[-1, :, :] = self.current_player  # 全部的值都是当前角色
 
     if next_action is None:
-        return x
+      return x
 
     v = self.get_winner()  # 胜负情况
 
@@ -260,5 +260,5 @@ class Board:
     x_flip_vertical = np.flip(x, 1)
     y_flip_vertical = [y[0], np.flip(y[1].reshape(self.size, self.size), 0).flatten()]
     data_flip_vertical = (x_flip_vertical, y_flip_vertical)
-    
+
     return data_original, data_flip_horizontal, data_flip_vertical
