@@ -32,9 +32,11 @@ class Train:
       print("create checkpoint directory: {}".format(checkpoint_dir))
       os.mkdir(checkpoint_dir)
     if self.load_checkpoint:
+      print('loading checkpoint...')
       self.net.load(checkpoint_file)
       with open(data_file, 'rb') as f:
         train_data = pickle.load(f)
+      print('checkpoint loaded success, total length of train_data:', len(train_data))
     else:
       train_data = []
 
