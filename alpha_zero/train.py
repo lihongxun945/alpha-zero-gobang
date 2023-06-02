@@ -66,6 +66,7 @@ class Train:
     white_wins = 0
     draws = 0
     for epoch in tqdm(range(self.iteration_epochs), desc="Self Play"):
+      self.ai.reset()
       board = self.board.copy()
 
       epoch_steps = 0

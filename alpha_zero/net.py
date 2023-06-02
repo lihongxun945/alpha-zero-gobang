@@ -11,7 +11,7 @@
 
 import tensorflow as tf
 import time
-from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, Reshape, BatchNormalization, Add, Activation 
+from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, Reshape, BatchNormalization, Add, Activation
 from tensorflow.keras.models import Model
 from tensorflow.keras.applications import ResNet50
 from tensorflow.keras.optimizers import Adam
@@ -89,12 +89,12 @@ class Net:
 #                      metrics={'policy_output': 'accuracy', 'value_output': 'mse'})
 
   def predict(self, state):
-    start = time.time()
+    # start = time.time()
     pi, v = self.model(state, training=False)
-   #print('model time', time.time()-start)
-   #start = time.time()
-   #self.model.predict(state, batch_size=17)
-   #print('predict time', time.time()-start)
+    #print('model time', time.time()-start)
+    #start = time.time()
+    #self.model.predict(state, batch_size=17)
+    #print('predict time', time.time()-start)
     return pi.numpy()[0], v.numpy()[0]
 
   def train(self, x, v, pi):

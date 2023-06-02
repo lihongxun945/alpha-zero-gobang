@@ -13,7 +13,7 @@ import numpy as np
 import time
 
 c_puct = 1
-show_performance = True
+enable_cache = True
 
 class Node:
   def __init__(self, parent=None, P=0, Q=0):
@@ -58,8 +58,19 @@ class MCTS:
     self.simulation_num = simulation_num
     self.c_puct = c_puct
     self.self_play = self_play
+
+    # performance
+    self.reset()
+
+  def reset(self):
+    self.performance_start_time = time.time()
     self.performance_predict_time = 0
     self.performance_predict_count = 0
+    self.predict_cache = {}
+    self.predict_cache_hit = 0
+
+  def displayPerformance(self):
+    print('MCTS performance: total time: %s, predict time: %f, predict count: %d, average predict time: %f, predict cache hit percent: %f' % (time.time() - self.performance_start_time, self.performance_predict_time, self.performance_predict_count, self.performance_predict_time / self.performance_predict_count, self.predict_cache_hit / (self.performance_predict_count + self.predict_cache_hit)))
 
   def _simulate(self, color):
     node = self.root
@@ -79,11 +90,18 @@ class MCTS:
     else:
       train_data = board_copy.get_data()
       train_data = np.expand_dims(train_data, axis=0)  # 转换为四维张量，因为模型需要 batch 维度
-      predict_start_time = time.time()
-      predict = self.net.predict(train_data)
-      self.performance_predict_time += time.time() - predict_start_time
-      self.performance_predict_count += 1
-      action_probs, v = self.net.predict(train_data)
+      board_string = board_copy.get_board_string()
+      predict = None
+      if enable_cache and board_string in self.predict_cache:
+        predict = self.predict_cache[board_string]
+        self.predict_cache_hit += 1
+      else:
+        predict_start_time = time.time()
+        predict = self.net.predict(train_data)
+        self.performance_predict_time += time.time() - predict_start_time
+        self.performance_predict_count += 1
+        self.predict_cache[board_string] = predict
+      action_probs, v = predict
       action_probs = action_probs * self.board.get_valid_moves_mask()
       v = v[0]
       # print('expand', action_probs[0], v[0][0])
@@ -92,7 +110,6 @@ class MCTS:
         action_probs = 0.75*action_probs + 0.25 * np.random.dirichlet(0.03*np.ones(len(action_probs)))
       node.expand(action_probs, v)
       q = v
-
 
     node.update_recursive(-q if color == 1 else q)
     return q
@@ -105,9 +122,6 @@ class MCTS:
     black_wins = 0
     white_wins = 0
     draws = 0
-    self.performance_predict_time = 0
-    self.performance_predict_count = 0
-    start_time = time.time()
     for _ in range(self.simulation_num):
       winner = self._simulate(color)
       if winner == 1:
@@ -116,9 +130,6 @@ class MCTS:
         white_wins += 1
       else:
         draws += 1
-    end_time = time.time()
-    if show_performance:
-      print('total time', end_time - start_time, 'predict time', self.performance_predict_time, 'predict count', self.performance_predict_count, 'avg predict time', self.performance_predict_time / self.performance_predict_count)
     if verbose:
       print('results:', 'black wins', black_wins, 'white wins', white_wins, 'draws', draws)
       print('root:', self.root.get_visit_count())
