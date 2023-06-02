@@ -54,26 +54,22 @@ class Board:
       for j in range(self.size):
         if self.board[i][j] == 0:
           continue
-        for dx, dy in directions:
-          try:
-            for k in range(1, 5):
-              if i + k * dx < 0 or j + k * dy < 0 or i + k * dx >= self.size or j + k * dy >= self.size:
-                break
-              if self.board[i][j] != self.board[i + k * dx][j + k * dy]:
-                break
-            else:
-              return self.board[i][j]
-          except IndexError:
-            continue
+        else:
+          if self.is_current_position_winning(i * self.size + j, directions=directions):
+            return self.board[i][j]
     return 0  # No winner yet
 
-  def _count_same_color(self, x, y, dx, dy):
-    count = 0
-    color = self.board[x][y]
-    while 0 <= x < self.size and 0 <= y < self.size and self.board[x][y] == color:
-      count += 1
-      x, y = x + dx, y + dy
-    return count
+  def is_current_position_winning(self, position, directions=[(1, 0), (0, 1), (1, 1), (1, -1), (0, -1), (-1, 0), (-1, 1), (-1, -1)]):
+    i, j = position // self.size, position % self.size
+    for dx, dy in directions:
+      for k in range(1, 5):
+        if i + k * dx < 0 or j + k * dy < 0 or i + k * dx >= self.size or j + k * dy >= self.size:
+          break
+        if self.board[i][j] != self.board[i + k * dx][j + k * dy]:
+          break
+      else:
+        return True
+    return False
 
   def display(self):
     print("  ", end="")
@@ -93,36 +89,54 @@ class Board:
       print()
 
   # 返回所有合法的位置，不合法的不返回，这里是没有考虑五子棋的知识的
-  def get_valid_moves(self):
+  def get_valid_moves_all(self):
     return [i for i in range(self.size * self.size) if self.board[i // self.size][i % self.size] == 0]
 
-  # 返回所有合法的位置
-  # 这里增加了五子棋的一点点知识，如果当前有能连成五子的棋子，那么只返回这些位置（黑棋白棋都包括）
-  # 还可以在这里增加更多的知识，以提高训练的效率
-  def get_valid_moves_for_train(self):
-    valid_moves = []
-    winning_moves = []
+  # 返回所有合法的位置，增加了五子棋的一些知识
+  # 1. 如果存在能连成五个子的位置，那么只返回这些位置
+  # 2. 返回周围2步之内至少有一个子的位置，以及中间的空位
+  def get_valid_moves(self):
+    winning_moves = set()
+
+    # 先检查是否存在能连成五子的棋子
     for row in range(self.size):
       for col in range(self.size):
         if self.board[row][col] == 0:
-          # 检查这个位置周围是否有棋子
-          if len(self.history) >= 1:
-            has_adjacent_piece = False
-            for dr in [-2, -1, 0, 1, 2]:
-              for dc in [-2, -1, 0, 1, 2]:
-                if (0 <= row+dr < self.size) and (0 <= col+dc < self.size) and (self.board[row+dr][col+dc] != 0):
-                  has_adjacent_piece = True
-                  break
-            if not has_adjacent_piece:
-              continue
           # 尝试下一个黑子，看看能不能连成五子
           for player in [-1, 1]:
             self.board[row][col] = player # 不要调用self.move ，因为这里颜色不对，可能会导致混乱
-            if self.get_winner() == player:
-              winning_moves.append(row*self.size + col)
+            if self.is_current_position_winning(row*self.size+col):
+              winning_moves.add(row*self.size + col)
             self.board[row][col] = 0
-          valid_moves.append(row*self.size + col)
-    return winning_moves if winning_moves else valid_moves
+    if winning_moves:
+      return list(winning_moves)
+
+    valid_moves = set()
+    # 只检测周围2步范围内有至少一个棋子的位置
+    for row in range(self.size):
+      for col in range(self.size):
+        if self.board[row][col] == 0:
+          has_adjacent_piece = False
+          for dr in [-2, -1, 0, 1, 2]:
+            if has_adjacent_piece:
+              break
+            for dc in [-2, -1, 0, 1, 2]:
+              if (0 <= row+dr < self.size) and (0 <= col+dc < self.size) and (self.board[row+dr][col+dc] != 0):
+                has_adjacent_piece = True
+                break
+          if not has_adjacent_piece:
+            continue
+          else:
+            valid_moves.add(row*self.size + col)
+    # 如果中间没人走，也要包括中间，避免总是被对手引导到棋盘边缘
+    _range = [-1, 0, 1] if self.size > 3 else [0]
+    for x in _range:
+      for y in _range:
+          i = int(self.size / 2) + x
+          j = int(self.size / 2) + y
+          if self.board[i][j] == 0:
+            valid_moves.add(i*self.size + j)
+    return list(valid_moves)
 
   def get_valid_moves_mask(self):
     mask = np.zeros(self.size * self.size, dtype=np.int8)

@@ -80,7 +80,7 @@ class MCTS:
 
     q = None
     while not node.is_leaf():
-      action, node = node.select(self.c_puct)
+      action, node = node.select(self.root.N)
       # print('select', action, node)
       board_copy.move(action, color)
       color = -color

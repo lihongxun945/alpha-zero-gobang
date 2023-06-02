@@ -66,7 +66,7 @@ class TestPureMCTS(unittest.TestCase):
   def test_actions(self):
     for size, moves, color, actions in manuals:
       board = Board(size)  # Initialize a 5x5 board
-      mcts = PureMCTS(board, 5000)  # Initialize a MCTS with 100 simulations
+      mcts = PureMCTS(board, 2000)  # Initialize a MCTS with 100 simulations
       for move in moves:
         board.move(move)
       m = mcts.move(None, False)

@@ -62,6 +62,7 @@ class TestBoard(unittest.TestCase):
       board.move(i, 1)
       board.move(i + 5, -1)
     valid_moves = board.get_valid_moves()
+    valid_moves.sort()
     self.assertTrue(np.all(valid_moves == np.array([4, 9])))
     valid_moves_mask = board.get_valid_moves_mask()
     mask = np.zeros(25)
@@ -70,11 +71,12 @@ class TestBoard(unittest.TestCase):
     self.assertTrue(np.all(valid_moves_mask == np.array(mask)))
 
     # 只返回周围有棋子的位置
-    board = Board(size=4, first_player=1)
+    board = Board(size=5, first_player=1)
     board.move(0)
     valid_moves = board.get_valid_moves()
+    valid_moves.sort()
     print(valid_moves)
-    self.assertTrue(np.all(valid_moves == np.array([1, 2, 4, 5, 6, 8, 9, 10])))
+    self.assertTrue(np.all(valid_moves == np.array([1, 2, 5, 6, 7, 8, 10, 11, 12, 13, 16, 17, 18])))
 
 
 

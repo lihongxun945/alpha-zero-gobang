@@ -21,8 +21,8 @@ class TestNet(unittest.TestCase):
     x = np.expand_dims(x, axis=0)  # 转换为四维张量，因为模型需要 batch 维度
     # self.net.model.summary()
     probs, value = self.net.predict(x)
-    self.assertEqual(probs.shape, (1, self.size*self.size))
-    self.assertEqual(value.shape, (1, 1))
+    self.assertEqual(probs.shape, (self.size*self.size,))
+    self.assertEqual(value.shape, (1,))
 
   def test_train(self):
     board = Board(self.size)
