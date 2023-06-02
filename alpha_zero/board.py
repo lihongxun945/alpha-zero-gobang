@@ -112,22 +112,38 @@ class Board:
       return list(winning_moves)
 
     valid_moves = set()
-    # 只检测周围2步范围内有至少一个棋子的位置
-    for row in range(self.size):
-      for col in range(self.size):
-        if self.board[row][col] == 0:
-          has_adjacent_piece = False
-          for dr in [-2, -1, 0, 1, 2]:
-            if has_adjacent_piece:
-              break
-            for dc in [-2, -1, 0, 1, 2]:
-              if (0 <= row+dr < self.size) and (0 <= col+dc < self.size) and (self.board[row+dr][col+dc] != 0):
-                has_adjacent_piece = True
+    neighbors_range = [-2, -1, 0, 1, 2]
+    # 只检测周围2步范围内有至少一个棋子的位置，为了提升效率，这里分成了2种实现
+    # 当落子的数量小于空位的数量，则从有棋子的地方检测空位
+    if len(self.history) < self.size * self.size/2:
+      for row in range(self.size):
+        for col in range(self.size):
+          if self.board[row][col] != 0:
+            # 在这个棋子周围迭代所有的位置
+            for dr in neighbors_range:
+              for dc in neighbors_range:
+                new_row, new_col = row + dr, col + dc
+                # 如果这个位置在棋盘上，并且是空的，则加入到返回的集合中
+                if (0 <= new_row < self.size) and (0 <= new_col < self.size) and (self.board[new_row][new_col] == 0):
+                  valid_moves.add(new_row * self.size + new_col)
+
+    else:
+      # 当落子的数量大于空位的数量，则从空位检测有棋子的地方
+      for row in range(self.size):
+        for col in range(self.size):
+          if self.board[row][col] == 0:
+            has_adjacent_piece = False
+            for dr in neighbors_range:
+              if has_adjacent_piece:
                 break
-          if not has_adjacent_piece:
-            continue
-          else:
-            valid_moves.add(row*self.size + col)
+              for dc in neighbors_range:
+                if (0 <= row+dr < self.size) and (0 <= col+dc < self.size) and (self.board[row+dr][col+dc] != 0):
+                  has_adjacent_piece = True
+                  break
+            if not has_adjacent_piece:
+              continue
+            else:
+              valid_moves.add(row*self.size + col)
     # 如果中间没人走，也要包括中间，避免总是被对手引导到棋盘边缘
     _range = [-1, 0, 1] if self.size > 3 else [0]
     for x in _range:
@@ -173,39 +189,6 @@ class Board:
     将整数位置转换为二维坐标
     """
     return coordinate[0] * self.size + coordinate[1]
-
-  # def get_data(self, next_action = None):
-  #   x = np.zeros((17, self.size, self.size), dtype=np.int8)
-  #   # 填充棋盘状态
-  #   history_len = len(self.history)
-  #   for i in range(16):
-  #     if i < history_len:
-  #       # 获取历史状态
-  #       state = np.zeros((self.size, self.size), dtype=np.int8)
-  #       # 从history中获取每一次的落子，然后把它转换成棋盘状态
-  #       for j in range(history_len - i):
-  #         position, color = self.history[j]
-  #         row, col = self.position_to_coordinate(position)
-  #         state[row, col] = color
-
-  #       # 将每一次落子后的棋盘状态标记到x的前16个平面上
-  #       x[15 - i, :, :] = state
-
-  #   # 最后一个平面表示当前轮到哪一方落子
-  #   x[-1, :, :] = self.current_player  # 全部的值都是当前角色
-
-  #   if next_action is None:
-  #     return x
-
-  #   v = self.get_winner()  # 胜负情况
-
-  #   # 创建一个全零向量表示落子概率
-  #   pi = np.zeros(self.size * self.size)
-  #   pi[next_action] = 1
-
-  #   y = [v, pi]
-
-  #   return x, y
 
   '''
   AlphaZero 的神经网络输入表示由 17 个二值特征平面组成。这些特征平面表示了棋盘上的情况以及当前的游戏状态，包括当前玩家的棋子位置、对手的棋子位置以及其他游戏相关信息。具体来说，这 17 层可以被细分为：
