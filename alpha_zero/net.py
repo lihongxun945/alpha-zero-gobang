@@ -98,7 +98,7 @@ class Net:
     return pi.numpy()[0], v.numpy()[0]
 
   def train(self, x, v, pi):
-    return self.model.fit(x, {'policy_output': pi, 'value_output': v}, epochs=epochs)
+    return self.model.fit(x, {'policy_head': pi, 'value_head': v}, epochs=epochs)
 
   def save(self, filepath):
     self.model.save_weights(filepath)

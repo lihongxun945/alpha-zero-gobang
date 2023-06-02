@@ -60,13 +60,13 @@ class Train:
         pickle.dump(train_data, f)
 
   def _run_iteration(self):
+    self.ai.reset()
     iteration_data = []
 
     black_wins = 0
     white_wins = 0
     draws = 0
     for epoch in tqdm(range(self.iteration_epochs), desc="Self Play"):
-      self.ai.reset()
       board = self.board.copy()
 
       epoch_steps = 0
@@ -93,5 +93,6 @@ class Train:
       for data in epoch_data:
         iteration_data.append([data[0], winner, data[1][1]])
     print('summary: black wins', black_wins, 'white wins', white_wins, 'draws', draws)
+    self.ai.displayPerformance()
 
     return iteration_data
