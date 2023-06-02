@@ -16,7 +16,10 @@ train_data_limit = 200000 # 训练数据最大长度
 gpu = True # 启用GPU加速
 
 if not gpu:
+  print('disable GPU')
   tf.config.set_visible_devices([], 'GPU')
+else:
+  print('GPUs:', tf.config.list_physical_devices('GPU'))
 
 board = Board(size=board_size)
 net = Net(board_size)
