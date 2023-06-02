@@ -10,9 +10,12 @@
 '''
 
 import tensorflow as tf
-from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, Reshape
+import time
+from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, Reshape, BatchNormalization, Add, Activation 
+from tensorflow.keras.models import Model
 from tensorflow.keras.applications import ResNet50
 from tensorflow.keras.optimizers import Adam
+import numpy as np
 
 lr = 0.001
 epochs = 20
@@ -23,32 +26,76 @@ class Net:
     self.build_model()
 
   def build_model(self):
-    inp = Input((17, self.size, self.size))
+    residual_blocks=19
+    input_shape=(17, self.size, self.size)
+    # Step 1: 256 filters of kernel size 3x3 with stride 1
+    inputs = Input(shape=input_shape)
+    x = Conv2D(256, 3, padding="same", strides=1)(inputs)
+    x = BatchNormalization(axis=-1)(x)
+    x = Activation("relu")(x)
 
-    # 首先将输入转换为 ResNet50 需要的形状 (size, size, 3)
-    # x = Conv2D(3, (1, 1))(inp)  # 使用 1x1 卷积增加通道数，这不会改变空间维度
-    # x = Reshape((self.size, self.size, 3))(x)  # 将形状转换为 ResNet50 需要的 (size, size, 3)
+    # Step 2: 19 or 39 residual blocks
+    for _ in range(residual_blocks):
+        residual_input = x
+        # Convolution 1
+        x = Conv2D(256, 3, padding="same", strides=1)(x)
+        x = BatchNormalization(axis=-1)(x)
+        x = Activation("relu")(x)
+        # Convolution 2
+        x = Conv2D(256, 3, padding="same", strides=1)(x)
+        x = BatchNormalization(axis=-1)(x)
+        # Add skip connection
+        x = Add()([x, residual_input])
+        x = Activation("relu")(x)
 
-    base_model = ResNet50(include_top=False, weights=None, input_tensor=inp)
+    # Step 3: Policy head
+    policy_head = Conv2D(2, 1, padding="same", strides=1)(x)
+    policy_head = BatchNormalization(axis=-1)(policy_head)
+    policy_head = Activation("relu")(policy_head)
+    policy_head = Flatten()(policy_head)
+    policy_head = Dense(self.size * self.size, activation="softmax", name="policy_head")(policy_head)
 
-    x = base_model.output
-    x = Flatten()(x)
+    # Step 4: Value head
+    value_head = Conv2D(1, 1, padding="same", strides=1)(x)
+    value_head = BatchNormalization(axis=-1)(value_head)
+    value_head = Activation("relu")(value_head)
+    value_head = Flatten()(value_head)
+    value_head = Dense(256, activation="relu")(value_head)
+    value_head = Dense(1, activation="tanh", name="value_head")(value_head)
 
-    # 添加两个输出层
-    policy_output = Dense(self.size * self.size, activation='softmax', name='policy_output')(x)
-    value_output = Dense(1, activation='tanh', name='value_output')(x)
+    self.model = Model(inputs=inputs, outputs=[policy_head, value_head])
+    self.model.compile(optimizer=Adam(lr), loss=["categorical_crossentropy", "mean_squared_error"])
 
-    self.model = tf.keras.models.Model(inputs=base_model.input, outputs=[policy_output, value_output])
-    self.model.compile(loss={'policy_output': 'categorical_crossentropy', 'value_output': 'mse'},
-                       optimizer=Adam(lr),
-                       metrics={'policy_output': 'accuracy', 'value_output': 'mse'})
+
+# def build_model(self):
+#   inp = Input((17, self.size, self.size))
+
+#   # 首先将输入转换为 ResNet50 需要的形状 (size, size, 3)
+#   # x = Conv2D(3, (1, 1))(inp)  # 使用 1x1 卷积增加通道数，这不会改变空间维度
+#   # x = Reshape((self.size, self.size, 3))(x)  # 将形状转换为 ResNet50 需要的 (size, size, 3)
+
+#   base_model = ResNet50(include_top=True, weights=None, input_tensor=inp)
+
+#   x = base_model.output
+#   x = Flatten()(x)
+
+#   # 添加两个输出层
+#   policy_output = Dense(self.size * self.size, activation='softmax', name='policy_output')(x)
+#   value_output = Dense(1, activation='tanh', name='value_output')(x)
+
+#   self.model = tf.keras.models.Model(inputs=base_model.input, outputs=[policy_output, value_output])
+#   self.model.compile(loss={'policy_output': 'categorical_crossentropy', 'value_output': 'mse'},
+#                      optimizer=Adam(lr),
+#                      metrics={'policy_output': 'accuracy', 'value_output': 'mse'})
 
   def predict(self, state):
+    start = time.time()
     pi, v = self.model(state, training=False)
-
-    # print('PREDICTION TIME TAKEN : {0:03f}'.format(time.time()-start))
-    # print(self.model.predict(state))
-    return pi.numpy(), v.numpy()
+   #print('model time', time.time()-start)
+   #start = time.time()
+   #self.model.predict(state, batch_size=17)
+   #print('predict time', time.time()-start)
+    return pi.numpy()[0], v.numpy()[0]
 
   def train(self, x, v, pi):
     return self.model.fit(x, {'policy_output': pi, 'value_output': v}, epochs=epochs)

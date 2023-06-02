@@ -80,11 +80,12 @@ class MCTS:
       train_data = board_copy.get_data()
       train_data = np.expand_dims(train_data, axis=0)  # 转换为四维张量，因为模型需要 batch 维度
       predict_start_time = time.time()
-      action_probs, v = self.net.predict(train_data)
+      predict = self.net.predict(train_data)
       self.performance_predict_time += time.time() - predict_start_time
       self.performance_predict_count += 1
-      action_probs = action_probs[0] * self.board.get_valid_moves_mask()
-      v = v[0][0]
+      action_probs, v = self.net.predict(train_data)
+      action_probs = action_probs * self.board.get_valid_moves_mask()
+      v = v[0]
       # print('expand', action_probs[0], v[0][0])
       # 顶层节点使用 dirichlet 噪声
       if self.self_play and node.parent == self.root:
