@@ -86,7 +86,7 @@ class MCTS:
 
     if board_copy.is_game_over():
       winner = board_copy.get_winner()
-      value = 1 if winner == board_copy.get_current_player_color() else 0
+      value = 1 if winner == board_copy.get_current_player_color() else -1
       node.update_recursive(-value)
       return winner
     else:
@@ -111,7 +111,8 @@ class MCTS:
       if self.self_play and node.parent == self.root:
         action_probs = 0.75*action_probs + 0.25 * np.random.dirichlet(0.03*np.ones(len(action_probs)))
       node.expand(action_probs, v)
-      node.update_recursive(0)
+      value = v if color == 1 else -v
+      node.update_recursive(-value)
       return 0
 
   def move(self, color=None, verbose=False, temp=1):
