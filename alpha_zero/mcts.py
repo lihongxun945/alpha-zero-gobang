@@ -34,7 +34,7 @@ class Node:
     return max(self.children.items(),
                key=lambda act_node: act_node[1].Q + c_puct * act_node[1].P * (np.sqrt(total_count) / (1 + act_node[1].N)))
 
-  def expand(self, action_priors, v):
+  def expand(self, action_priors, v=0):
     for action in range(0, len(action_priors)):
       prob = action_priors[action]
       if action not in self.children:
@@ -78,7 +78,6 @@ class MCTS:
     if color is None:
       color = board_copy.get_current_player_color()
 
-    q = None
     while not node.is_leaf():
       action, node = node.select(self.root.N)
       # print('select', action, node)
@@ -86,7 +85,10 @@ class MCTS:
       color = -color
 
     if board_copy.is_game_over():
-      q = board_copy.get_winner()
+      winner = board_copy.get_winner()
+      value = 1 if winner == board_copy.get_current_player_color() else 0
+      node.update_recursive(-value)
+      return winner
     else:
       train_data = board_copy.get_data()
       train_data = np.expand_dims(train_data, axis=0)  # 转换为四维张量，因为模型需要 batch 维度
@@ -109,10 +111,8 @@ class MCTS:
       if self.self_play and node.parent == self.root:
         action_probs = 0.75*action_probs + 0.25 * np.random.dirichlet(0.03*np.ones(len(action_probs)))
       node.expand(action_probs, v)
-      q = v
-
-    node.update_recursive(-q if color == 1 else q)
-    return q
+      node.update_recursive(0)
+      return 0
 
   def move(self, color=None, verbose=False, temp=1):
     self.root = Node()  # reset the root node
