@@ -1,5 +1,7 @@
 ## Alpha Zero Gobang
 
+***当前还在开发中，功能尚不完善***
+
 Alpha Zero原理实现的五子棋AI，主要参考了Alpha Zero相关论文和github上的一些开源项目（见下文），代码主要由chatgpt生成但是做了一些调整。写这个项目的目的是为了研究Alpha Zero，同时测试chatgpt在较复杂的项目中的表现。
 
 ## 如何运行

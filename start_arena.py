@@ -5,7 +5,7 @@ from alpha_zero.board import Board
 from alpha_zero.mcts import MCTS
 from alpha_zero.net import Net
 
-board_size=9
+board_size=8
 silumation_num=400
 
 board = Board(size=board_size)

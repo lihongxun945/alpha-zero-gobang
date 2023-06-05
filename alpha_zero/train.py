@@ -34,9 +34,11 @@ class Train:
     if self.load_checkpoint:
       print('loading checkpoint...')
       self.net.load(checkpoint_file)
+      print('checkpoint loaded success')
       with open(data_file, 'rb') as f:
+        print('loading train_data...')
         train_data = pickle.load(f)
-      print('checkpoint loaded success, total length of train_data:', len(train_data))
+      print('train_data loaded success, total length :', len(train_data))
     else:
       train_data = []
 
