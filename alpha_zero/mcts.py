@@ -111,8 +111,7 @@ class MCTS:
       if self.self_play and node.parent == self.root:
         action_probs = 0.75*action_probs + 0.25 * np.random.dirichlet(0.03*np.ones(len(action_probs)))
       node.expand(action_probs, v)
-      # value = v if color == 1 else -v
-      node.update_recursive(0)
+      node.update_recursive(-v*color)
       return 0
 
   def move(self, color=None, verbose=False, temp=1):

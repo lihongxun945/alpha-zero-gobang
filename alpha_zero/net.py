@@ -26,7 +26,7 @@ class Net:
     self.build_model()
 
   def build_model(self):
-    residual_blocks=19
+    residual_blocks=self.size # 根据AlphzZero论文，这里是19或39个残差块。为了加速训练，这里先用size个残差块
     input_shape=(17, self.size, self.size)
     # Step 1: 256 filters of kernel size 3x3 with stride 1
     inputs = Input(shape=input_shape)

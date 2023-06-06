@@ -99,17 +99,17 @@ class Board:
     winning_moves = set()
 
     # 先检查是否存在能连成五子的棋子
-    for row in range(self.size):
-      for col in range(self.size):
-        if self.board[row][col] == 0:
-          # 尝试下一个黑子，看看能不能连成五子
-          for player in [-1, 1]:
-            self.board[row][col] = player # 不要调用self.move ，因为这里颜色不对，可能会导致混乱
-            if self.is_current_position_winning(row*self.size+col):
-              winning_moves.add(row*self.size + col)
-            self.board[row][col] = 0
-    if winning_moves:
-      return list(winning_moves)
+    # for row in range(self.size):
+    #   for col in range(self.size):
+    #     if self.board[row][col] == 0:
+    #       # 尝试下一个黑子，看看能不能连成五子
+    #       for player in [-1, 1]:
+    #         self.board[row][col] = player # 不要调用self.move ，因为这里颜色不对，可能会导致混乱
+    #         if self.is_current_position_winning(row*self.size+col):
+    #           winning_moves.add(row*self.size + col)
+    #         self.board[row][col] = 0
+    # if winning_moves:
+    #   return list(winning_moves)
 
     valid_moves = set()
     neighbors_range = [-2, -1, 0, 1, 2]

@@ -110,13 +110,38 @@ class TestBoard(unittest.TestCase):
     board.display()
 
   def test_get_valid_moves(self):
-    board = Board(size=3, first_player=1)
-    board.move(0)
-    board.move(8)
-    valid_moves = board.get_valid_moves()
-    self.assertTrue(np.all(valid_moves == np.array([1, 2, 3, 4, 5, 6, 7])))
-    valid_moves_mask = board.get_valid_moves_mask()
-    self.assertTrue(np.all(valid_moves_mask == np.array([0, 1, 1, 1, 1, 1, 1, 1, 0])))
+    manuals = [
+      # O - - 
+      # - - - 
+      # - - O 
+      [3, [0, 8], [1, 2, 3, 4, 5, 6, 7]],
+      # - - - - - - - -
+      # X - - - - - - -
+      # - X - - - - - -
+      # X - O O O O - -
+      # X - - - - - - -
+      # - - - - - - - -
+      # - - - - - - - -
+      # - - - - - - - -
+      [8, [26, 8, 27, 17, 28, 24, 29, 32], [25, 30]],
+      # - - - - - - - -
+      # X - - - - - - -
+      # - X - - - - - -
+      # X - O O - O O -
+      # X - - - - - - -
+      # - - - - - - - -
+      # - - - - - - - -
+      # - - - - - - - -
+      [8, [26, 8, 27, 17, 29, 24, 30, 32], [28]],
+    ]
+    for size, actions, moves in manuals:
+      board = Board(size, first_player=1)
+      for i in actions:
+        board.move(i)  # 纵向连五
+      board.display()
+      valid_moves = board.get_valid_moves()
+      print(valid_moves)
+      self.assertTrue(np.all(valid_moves == np.array(moves)))
 
     # 测试如果能连五，那么只返回连五的位置
     board = Board(size=5, first_player=1)
