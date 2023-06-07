@@ -11,7 +11,7 @@
 
 import tensorflow as tf
 import time
-from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, Reshape, BatchNormalization, Add, Activation
+from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, Reshape, BatchNormalization, Add, Activation, Dropout
 from tensorflow.keras.models import Model
 from tensorflow.keras.applications import ResNet50
 from tensorflow.keras.optimizers import Adam
@@ -26,45 +26,73 @@ class Net:
     self.build_model()
 
   def build_model(self):
-    residual_blocks=self.size # 根据AlphzZero论文，这里是19或39个残差块。为了加速训练，这里先用size个残差块
-    input_shape=(1, self.size, self.size)
-    # Step 1: 256 filters of kernel size 3x3 with stride 1
-    inputs = Input(shape=input_shape)
-    x = Conv2D(256, 3, padding="same", strides=1)(inputs)
-    x = BatchNormalization(axis=-1)(x)
-    x = Activation("relu")(x)
+    # game params
+    num_channels = 512
+    self.action_size = self.size * self.size
 
-    # Step 2: 19 or 39 residual blocks
-    for _ in range(residual_blocks):
-        residual_input = x
-        # Convolution 1
-        x = Conv2D(256, 3, padding="same", strides=1)(x)
-        x = BatchNormalization(axis=-1)(x)
-        x = Activation("relu")(x)
-        # Convolution 2
-        x = Conv2D(256, 3, padding="same", strides=1)(x)
-        x = BatchNormalization(axis=-1)(x)
-        # Add skip connection
-        x = Add()([x, residual_input])
-        x = Activation("relu")(x)
+    # Neural Net
+    self.input_boards = Input(shape=(self.size, self.size))  # s: batch_size x board_x x board_y
 
-    # Step 3: Policy head
-    policy_head = Conv2D(2, 1, padding="same", strides=1)(x)
-    policy_head = BatchNormalization(axis=-1)(policy_head)
-    policy_head = Activation("relu")(policy_head)
-    policy_head = Flatten()(policy_head)
-    policy_head = Dense(self.size * self.size, activation="softmax", name="policy_head")(policy_head)
+    x_image = Reshape((self.size, self.size, 1))(self.input_boards)  # batch_size  x board_x x board_y x 1
+    h_conv1 = Activation('relu')(BatchNormalization(axis=3)(
+      Conv2D(num_channels, 3, padding='same')(x_image)))  # batch_size  x board_x x board_y x num_channels
+    h_conv2 = Activation('relu')(BatchNormalization(axis=3)(
+      Conv2D(num_channels, 3, padding='same')(h_conv1)))  # batch_size  x board_x x board_y x num_channels
+    h_conv3 = Activation('relu')(BatchNormalization(axis=3)(
+      Conv2D(num_channels, 3, padding='valid')(h_conv2)))  # batch_size  x (board_x-2) x (board_y-2) x num_channels
+    h_conv4 = Activation('relu')(BatchNormalization(axis=3)(
+      Conv2D(num_channels, 3, padding='valid')(h_conv3)))  # batch_size  x (board_x-4) x (board_y-4) x num_channels
+    h_conv4_flat = Flatten()(h_conv4)
+    s_fc1 = Dropout(0.3)(
+      Activation('relu')(BatchNormalization(axis=1)(Dense(1024)(h_conv4_flat))))  # batch_size x 1024
+    s_fc2 = Dropout(0.3)(
+      Activation('relu')(BatchNormalization(axis=1)(Dense(512)(s_fc1))))  # batch_size x 1024
+    self.pi = Dense(self.action_size, activation='softmax', name='policy_head')(s_fc2)  # batch_size x self.action_size
+    self.v = Dense(1, activation='tanh', name='value_head')(s_fc2)  # batch_size x 1
 
-    # Step 4: Value head
-    value_head = Conv2D(1, 1, padding="same", strides=1)(x)
-    value_head = BatchNormalization(axis=-1)(value_head)
-    value_head = Activation("relu")(value_head)
-    value_head = Flatten()(value_head)
-    value_head = Dense(256, activation="relu")(value_head)
-    value_head = Dense(1, activation="tanh", name="value_head")(value_head)
+    self.model = Model(inputs=self.input_boards, outputs=[self.pi, self.v])
+    self.model.compile(loss=['categorical_crossentropy', 'mean_squared_error'], optimizer=Adam(lr))
 
-    self.model = Model(inputs=inputs, outputs=[policy_head, value_head])
-    self.model.compile(optimizer=Adam(lr), loss=["categorical_crossentropy", "mean_squared_error"])
+  # def build_model(self):
+  #   residual_blocks=self.size # 根据AlphzZero论文，这里是19或39个残差块。为了加速训练，这里先用size个残差块
+  #   input_shape=(1, self.size, self.size)
+  #   # Step 1: 256 filters of kernel size 3x3 with stride 1
+  #   inputs = Input(shape=input_shape)
+  #   x = Conv2D(256, 3, padding="same", strides=1)(inputs)
+  #   x = BatchNormalization(axis=-1)(x)
+  #   x = Activation("relu")(x)
+  #
+  #   # Step 2: 19 or 39 residual blocks
+  #   for _ in range(residual_blocks):
+  #       residual_input = x
+  #       # Convolution 1
+  #       x = Conv2D(256, 3, padding="same", strides=1)(x)
+  #       x = BatchNormalization(axis=-1)(x)
+  #       x = Activation("relu")(x)
+  #       # Convolution 2
+  #       x = Conv2D(256, 3, padding="same", strides=1)(x)
+  #       x = BatchNormalization(axis=-1)(x)
+  #       # Add skip connection
+  #       x = Add()([x, residual_input])
+  #       x = Activation("relu")(x)
+  #
+  #   # Step 3: Policy head
+  #   policy_head = Conv2D(2, 1, padding="same", strides=1)(x)
+  #   policy_head = BatchNormalization(axis=-1)(policy_head)
+  #   policy_head = Activation("relu")(policy_head)
+  #   policy_head = Flatten()(policy_head)
+  #   policy_head = Dense(self.size * self.size, activation="softmax", name="policy_head")(policy_head)
+  #
+  #   # Step 4: Value head
+  #   value_head = Conv2D(1, 1, padding="same", strides=1)(x)
+  #   value_head = BatchNormalization(axis=-1)(value_head)
+  #   value_head = Activation("relu")(value_head)
+  #   value_head = Flatten()(value_head)
+  #   value_head = Dense(256, activation="relu")(value_head)
+  #   value_head = Dense(1, activation="tanh", name="value_head")(value_head)
+  #
+  #   self.model = Model(inputs=inputs, outputs=[policy_head, value_head])
+  #   self.model.compile(optimizer=Adam(lr), loss=["categorical_crossentropy", "mean_squared_error"])
 
 
 # def build_model(self):
