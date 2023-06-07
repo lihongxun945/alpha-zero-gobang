@@ -265,16 +265,31 @@ class Board:
     return self.get_winner() !=0 or len(self.get_valid_moves()) == 0
 
   # 数据增强，进行水平和垂直翻转
+  # def enhance_data(self, x, y):
+  #   # 原始数据
+  #   data_original = (x, y)
+  #   # 水平翻转数据
+  #   x_flip_horizontal = np.flip(x, 2)
+  #   y_flip_horizontal = [y[0], np.flip(y[1].reshape(self.size, self.size), 1).flatten()]
+  #   data_flip_horizontal = (x_flip_horizontal, y_flip_horizontal)
+  #   # 垂直翻转数据
+  #   x_flip_vertical = np.flip(x, 1)
+  #   y_flip_vertical = [y[0], np.flip(y[1].reshape(self.size, self.size), 0).flatten()]
+  #   data_flip_vertical = (x_flip_vertical, y_flip_vertical)
+  #
+  #   return data_original, data_flip_horizontal, data_flip_vertical
+
   def enhance_data(self, x, y):
     # 原始数据
     data_original = (x, y)
     # 水平翻转数据
-    x_flip_horizontal = np.flip(x, 2)
+    x_flip_horizontal = np.flip(x, 1)
     y_flip_horizontal = [y[0], np.flip(y[1].reshape(self.size, self.size), 1).flatten()]
     data_flip_horizontal = (x_flip_horizontal, y_flip_horizontal)
     # 垂直翻转数据
-    x_flip_vertical = np.flip(x, 1)
+    x_flip_vertical = np.flip(x, 0)
     y_flip_vertical = [y[0], np.flip(y[1].reshape(self.size, self.size), 0).flatten()]
     data_flip_vertical = (x_flip_vertical, y_flip_vertical)
 
     return data_original, data_flip_horizontal, data_flip_vertical
+
