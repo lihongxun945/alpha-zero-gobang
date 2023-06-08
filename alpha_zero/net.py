@@ -55,7 +55,7 @@ class Net:
 
   def build_model(self):
     residual_blocks=19 # 根据AlphzZero论文，这里是19或39个残差块。
-    input_shape=(1, self.size, self.size)
+    input_shape=(17, self.size, self.size)
     # Step 1: 256 filters of kernel size 3x3 with stride 1
     inputs = Input(shape=input_shape)
     x = Conv2D(256, 3, padding="same", strides=1)(inputs)
