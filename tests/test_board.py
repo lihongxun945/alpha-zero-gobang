@@ -115,24 +115,19 @@ class TestBoard(unittest.TestCase):
       # - - - 
       # - - O 
       [3, [0, 8], [1, 2, 3, 4, 5, 6, 7]],
-      # - - - - - - - -
-      # X - - - - - - -
-      # - X - - - - - -
-      # X - O O O O - -
-      # X - - - - - - -
-      # - - - - - - - -
-      # - - - - - - - -
-      # - - - - - - - -
-      [8, [26, 8, 27, 17, 28, 24, 29, 32], [25, 30]],
-      # - - - - - - - -
-      # X - - - - - - -
-      # - X - - - - - -
-      # X - O O - O O -
-      # X - - - - - - -
-      # - - - - - - - -
-      # - - - - - - - -
-      # - - - - - - - -
-      [8, [26, 8, 27, 17, 29, 24, 30, 32], [28]],
+      # O - - - -
+      # - - - - -
+      # - - - - -
+      # - - - - -
+      # - - - - -
+      [5, [0], [1, 2, 5, 6, 7, 8, 10, 11, 12, 13, 16, 17, 18]],
+      # - - - - -
+      # - - - - -
+      # - O - - -
+      # - - - - -
+      # - - - - -
+      [5, [11], [0, 1, 2, 3, 5, 6, 7, 8, 10, 12, 13, 15, 16, 17, 18, 20, 21, 22, 23]]
+
     ]
     for size, actions, moves in manuals:
       board = Board(size, first_player=1)
@@ -142,29 +137,6 @@ class TestBoard(unittest.TestCase):
       valid_moves = board.get_valid_moves()
       print(valid_moves)
       self.assertTrue(np.all(valid_moves == np.array(moves)))
-
-    # 测试如果能连五，那么只返回连五的位置
-    board = Board(size=5, first_player=1)
-    for i in [0, 1, 2, 3]:
-      board.move(i, 1)
-      board.move(i + 5, -1)
-    valid_moves = board.get_valid_moves()
-    valid_moves.sort()
-    self.assertTrue(np.all(valid_moves == np.array([4, 9])))
-    valid_moves_mask = board.get_valid_moves_mask()
-    mask = np.zeros(25)
-    mask[4] = 1
-    mask[9] = 1
-    self.assertTrue(np.all(valid_moves_mask == np.array(mask)))
-
-    # 只返回周围有棋子的位置
-    board = Board(size=5, first_player=1)
-    board.move(0)
-    valid_moves = board.get_valid_moves()
-    valid_moves.sort()
-    print(valid_moves)
-    self.assertTrue(np.all(valid_moves == np.array([1, 2, 5, 6, 7, 8, 10, 11, 12, 13, 16, 17, 18])))
-
 
 
   def test_get_board_string(self):

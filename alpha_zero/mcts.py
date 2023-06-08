@@ -31,8 +31,9 @@ class Node:
     return self.parent is None
 
   def select(self, total_count):
-    return max(self.children.items(),
+    action, node = max(self.children.items(),
                key=lambda act_node: act_node[1].Q + c_puct * act_node[1].P * (np.sqrt(total_count) / (1 + act_node[1].N)))
+    return action, node
 
   def expand(self, action_priors, v=0):
     for action in range(0, len(action_priors)):
@@ -104,12 +105,19 @@ class MCTS:
         self.performance_predict_count += 1
         self.predict_cache[board_string] = predict
       action_probs, v = predict
-      action_probs = action_probs * self.board.get_valid_moves_mask()
-      v = v[0]
-      # print('expand', action_probs[0], v[0][0])
       # 顶层节点使用 dirichlet 噪声
       if self.self_play and node.parent == self.root:
         action_probs = 0.75*action_probs + 0.25 * np.random.dirichlet(0.03*np.ones(len(action_probs)))
+      action_probs = action_probs * board_copy.get_valid_moves_mask()
+      sum = np.sum(action_probs)
+      if sum > 0:
+        action_probs = action_probs / sum
+      else:
+        print('all valid moves have 0 probability, use workaround')
+        action_probs = action_probs + board_copy.get_valid_moves_mask()
+        action_probs = action_probs / np.sum(action_probs)
+      v = v[0]
+      # print('expand', action_probs[0], v[0][0])
       node.expand(action_probs, v)
       node.update_recursive(-v*color)
       return 0
