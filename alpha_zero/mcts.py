@@ -14,12 +14,14 @@ import time
 
 c_puct = 1
 enable_cache = True
+show_search_debug_info = False
 
 class Node:
-  def __init__(self, parent=None, P=0, Q=0):
+  def __init__(self, parent=None, P=0, Q=0, action=None):
     self.N = 1  # visit count
     self.Q = Q  # mean action value
     self.P = P  # prior probability
+    self.action = action # 移动位置
 
     self.parent = parent
     self.children = dict()
@@ -40,9 +42,14 @@ class Node:
       prob = action_priors[action]
       if action not in self.children:
         if prob > 0:
-          self.children[action] = Node(parent=self, P=prob, Q=v)
+          self.children[action] = Node(parent=self, P=prob, Q=v, action=action)
 
   def update(self, value):
+    if show_search_debug_info:
+      if self.action:
+        print('update node:', self.action//11, self.action%11, value)
+      else:
+        print('update root node:', value)
     self.N += 1
     self.Q = (self.N * self.Q + value) / (self.N + 1)
 
@@ -76,18 +83,29 @@ class MCTS:
   def _simulate(self, color):
     node = self.root
     board_copy = self.board.copy()
+
     if color is None:
       color = board_copy.get_current_player_color()
 
+    if show_search_debug_info:
+      print('simulating...')
     while not node.is_leaf():
       action, node = node.select(self.root.N)
       # print('select', action, node)
       board_copy.move(action, color)
+      if show_search_debug_info:
+        print('simulate move', action//self.board.size, action%self.board.size)
       color = -color
+
+    if show_search_debug_info:
+      board_copy.display()
+      print('current player is', board_copy.get_current_player_color())
 
     if board_copy.is_game_over():
       winner = board_copy.get_winner()
       value = 1 if winner == board_copy.get_current_player_color() else -1
+      if show_search_debug_info:
+        print('game over update', winner, -value)
       node.update_recursive(-value)
       return winner
     else:
@@ -105,6 +123,9 @@ class MCTS:
         self.performance_predict_count += 1
         self.predict_cache[board_string] = predict
       action_probs, v = predict
+      if show_search_debug_info:
+        print('predict probs', np.array([int(i*1000) for i in action_probs]).reshape(self.board.size, self.board.size))
+        print('predict value', v)
       # 顶层节点使用 dirichlet 噪声
       if self.self_play and node.parent == self.root:
         action_probs = 0.75*action_probs + 0.25 * np.random.dirichlet(0.03*np.ones(len(action_probs)))
@@ -119,7 +140,10 @@ class MCTS:
       v = v[0]
       # print('expand', action_probs[0], v[0][0])
       node.expand(action_probs, v)
-      node.update_recursive(-v*color)
+      if show_search_debug_info:
+        print('update:', -v*color)
+      # node.update_recursive(-v*color) # 这样更新会导致预测的胜率总是不准确，无法训练出有效的AI，应该还是返回0比较好
+      node.update_recursive(0)
       return 0
 
   def move(self, color=None, verbose=False, temp=1):
@@ -127,21 +151,8 @@ class MCTS:
     if color is None:
       color = self.board.get_current_player_color()
 
-    black_wins = 0
-    white_wins = 0
-    draws = 0
     for _ in range(self.simulation_num):
-      winner = self._simulate(color)
-      if winner == 1:
-        black_wins += 1
-      elif winner == -1:
-        white_wins += 1
-      else:
-        draws += 1
-    if verbose:
-      print('results:', 'black wins', black_wins, 'white wins', white_wins, 'draws', draws)
-      print('root:', self.root.get_visit_count())
-      self.board.display()
+      self._simulate(color)
 
     # 选最优解
     if temp == 0:
