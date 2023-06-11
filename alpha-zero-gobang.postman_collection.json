@@ -1,0 +1,57 @@
+{
+	"info": {
+		"_postman_id": "478c3815-5e9c-4a36-b0d0-525307957c73",
+		"name": "alpha-zero-gobang",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "create_session",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "default"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"size\": 15,\n    \"simulation_num\": 100\n}"
+				},
+				"url": {
+					"raw": "http://127.0.0.1:5000/create_session",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5000",
+					"path": [
+						"create_session"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_session",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "move",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}
