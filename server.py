@@ -62,7 +62,6 @@ def create_session():
 
 @app.route('/get_session/<session_id>', methods=['GET'])
 def get_session(session_id):
-  print("get_session", session_id, "sessions", sessions.keys(), "len", len(sessions))
   session = sessions.get(session_id)
   if session is None:
     return jsonify({'error': 'Invalid session_id'}), 400
@@ -85,15 +84,16 @@ def move(session_id):
   if session is None:
     return jsonify({'error': 'Invalid session_id'}), 400
 
-  location = request.json.get('location')
+  location = int(request.json.get('location'))
   if location is None:
     return jsonify({'error': 'Missing location'}), 400
 
+  if location not in session['board'].get_valid_moves_all():
+    return jsonify({'error': 'Invalid location'}), 400
   board = session['board']
   mcts = session['mcts']
   board.move(location)
   action = mcts.move()
-  print(action)
   board.move(action)
 
   return get_session(session_id)

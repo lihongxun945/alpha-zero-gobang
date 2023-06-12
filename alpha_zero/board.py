@@ -33,6 +33,11 @@ class Board:
     self.current_player = first_player
 
   def move(self, position, color=None):
+    # 格式化position，如果是数组，转换成整数
+    if isinstance(position, list):
+      position = position[0]*self.size + position[1]
+    if position not in self.get_valid_moves_all():
+      raise ValueError("Invalid move")
     if color is None:
       color = self.current_player
     x, y = position // self.size, position % self.size
