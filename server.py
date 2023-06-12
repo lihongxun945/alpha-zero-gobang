@@ -72,7 +72,7 @@ def get_session(session_id):
 
   return jsonify({
     'board': board.board,
-    # 'history': board.history,
+    'history': board.history,
     'current_player': board.get_current_player_color(),
     'winner': board.get_winner(),
     'size': board.size,

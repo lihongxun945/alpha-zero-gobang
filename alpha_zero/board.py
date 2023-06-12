@@ -37,7 +37,7 @@ class Board:
       color = self.current_player
     x, y = position // self.size, position % self.size
     self.board[x][y] = color
-    self.history.append((position, color))
+    self.history.append((int(position), color))
     self.current_player *= -1
 
   def undo(self, steps=1):
