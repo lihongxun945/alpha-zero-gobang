@@ -92,7 +92,7 @@ class Train:
           draws += 1
       print('#epoch', epoch, ', step ', epoch_steps, 'winner', winner)
       board.display()
-      print('history:', board.history)
+      print('history:', [[[h[0]//board.size, h[0]%board.size], h[1]] for h in board.history])
       for data in epoch_data:
         iteration_data.append([data[0], winner, data[1][1]])
     print('summary: black wins', black_wins, 'white wins', white_wins, 'draws', draws)
