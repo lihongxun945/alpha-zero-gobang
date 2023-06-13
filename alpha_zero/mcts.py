@@ -139,7 +139,7 @@ class MCTS:
         action_probs = action_probs / np.sum(action_probs)
       v = v[0]
       # print('expand', action_probs[0], v[0][0])
-      node.expand(action_probs, v)
+      node.expand(action_probs, color*v) # Q是当前玩家的胜率，所以要乘以玩家角色
       if show_search_debug_info:
         print('update:', -v*color)
       # node.update_recursive(-v*color) # 这样更新会导致预测的胜率总是不准确，无法训练出有效的AI，应该还是返回0比较好

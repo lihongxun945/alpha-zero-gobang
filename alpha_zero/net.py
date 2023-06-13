@@ -54,7 +54,7 @@ class Net:
     self.model.compile(loss=['categorical_crossentropy', 'mean_squared_error'], optimizer=Adam(lr))
 
   def build_model(self):
-    residual_blocks=19 # 根据AlphzZero论文，这里是19或39个残差块。
+    residual_blocks=9 # 根据AlphzZero论文，这里是19或39个残差块。为了在小棋盘上迅速验证效果，这里进行适当缩减
     input_shape=(17, self.size, self.size)
     # Step 1: 256 filters of kernel size 3x3 with stride 1
     inputs = Input(shape=input_shape)
