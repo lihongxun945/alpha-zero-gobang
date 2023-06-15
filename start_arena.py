@@ -3,10 +3,11 @@ from alpha_zero.arena import Arena
 from alpha_zero.players import HumanPlayer, MCTSPlayer
 from alpha_zero.board import Board
 
-board_size=11
-silumation_num=400
+board_size=6
+win_count=4
+silumation_num=100
 
-board = Board(size=board_size)
+board = Board(size=board_size, win_count=win_count)
 
 ai1 = MCTSPlayer(board=board, simulation_num=silumation_num)
 ai2 = HumanPlayer(board)

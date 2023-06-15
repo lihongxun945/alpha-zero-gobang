@@ -4,9 +4,10 @@ from alpha_zero.mcts import MCTS
 from alpha_zero.net import Net
 
 class MCTSPlayer:
-  def __init__(self, board, simulation_num=400):
-    net = Net(board.size)
-    net.load('checkpoint/best_checkpoint.h5')
+  def __init__(self, board, simulation_num=400, net=None):
+    if (net is None):
+      net = Net(board.size)
+      net.load('checkpoint/best_checkpoint.h5')
     self.mcts = MCTS(board=board, net=net, simulation_num=simulation_num, self_play=False)
 
   def move(self):

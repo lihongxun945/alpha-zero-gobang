@@ -10,21 +10,28 @@ import pickle
 import numpy as np
 import os
 from tqdm import tqdm
+from random import shuffle
+from alpha_zero.players import MCTSPlayer
+from alpha_zero.arena import Arena
+from copy import deepcopy
 
 checkpoint_dir = 'checkpoint'
 checkpoint_file = os.path.join(checkpoint_dir, 'best_checkpoint.h5')
+tmp_checkpoint_file = os.path.join(checkpoint_dir, 'tmp_checkpoint.h5')
 data_file = os.path.join(checkpoint_dir, 'train_data.pkl')
 
 class Train:
-  def __init__(self, board, ai, net, iterations=100, iteration_epochs=100, train_data_limit=2000, load_checkpoint=False, temp_threshold=20):
+  def __init__(self, board, ai, net, prev_net, iterations=100, iteration_epochs=100, train_data_limit=2000, load_checkpoint=False, temp_threshold=20):
     self.board = board
     self.ai = ai
     self.net = net
+    self.prev_net = prev_net
     self.iterations = iterations
     self.iteration_epochs = iteration_epochs
     self.data_limit = train_data_limit
     self.load_checkpoint = load_checkpoint
     self.temp_threshold = temp_threshold
+    self.train_data_history = []
 
   def start(self):
     # 创建文件夹
@@ -37,29 +44,56 @@ class Train:
       print('checkpoint loaded success')
       with open(data_file, 'rb') as f:
         print('loading train_data...')
-        train_data = pickle.load(f)
-      print('train_data loaded success, total length :', len(train_data))
-    else:
-      train_data = []
+        self.train_data_history= pickle.load(f)
+      print('train_data loaded success, total length :', len(self.train_data_history))
 
     for iteration in range(self.iterations):
       print(f"Starting iteration {iteration + 1}/{self.iterations}...")
       iteration_data = self._run_iteration()
+
+      # make new train data
+      train_data = deepcopy(self.train_data_history)
+
       train_data.extend(iteration_data)
       print('train_data length:', len(train_data))
 
       # If the training data exceeds the limit, remove the oldest data.
       if len(train_data) > self.data_limit:
-        del train_data[:len(train_data) - self.data_limit]
+        del train_data[:len(self.train_data) - self.data_limit]
+        print('train_data length after remove out of limit:', len(train_data))
 
       print("Training...")
-      X, y_v, y_p = zip(*train_data)
+
+      # shuffle the data before training
+      shuffled_train_data = deepcopy(train_data)
+      shuffle(shuffled_train_data)
+
+      X, y_v, y_p = zip(*shuffled_train_data)
+
+      self.net.save(tmp_checkpoint_file)
+      self.prev_net.load(tmp_checkpoint_file)
+
+      # do the training
       self.net.train(np.array(X), np.array(y_v), np.array(y_p))
 
-      print("Saving checkpoint...")
-      self.net.save(checkpoint_file)
-      with open(data_file, 'wb+') as f:
-        pickle.dump(train_data, f)
+      print("Pitting against previous version...")
+      prev_ai = MCTSPlayer(board=self.board, net=self.prev_net, simulation_num=self.ai.simulation_num)
+      current_ai = MCTSPlayer(board=self.board, net=self.net, simulation_num=self.ai.simulation_num)
+
+      area = Arena(board=self.board, ai1=prev_ai, ai2=current_ai, random_opening=True)
+      wins, fails, draws = area.start(match_count=10, verbose=False)
+
+      print(f"Pit result, new ai Wins: {wins}, Fails: {fails}, Draws: {draws}")
+
+      if wins/(wins+fails) > 0.6:
+        print("Accept!!! Saving checkpoint...")
+        self.net.save(checkpoint_file)
+        self.train_data_history = train_data
+        with open(data_file, 'wb+') as f:
+          pickle.dump(self.train_data_history, f)
+      else:
+        print("Discarding checkpoint...")
+        self.net.load(tmp_checkpoint_file)
 
   def _run_iteration(self):
     self.ai.reset()

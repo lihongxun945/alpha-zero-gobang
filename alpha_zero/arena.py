@@ -6,27 +6,87 @@
 其中AI实例有一个方法move，返回AI的落子位置
 '''
 
+'''
+帮我把这个方法改一下，可以指定ai1和ai2的对局次数，轮流执先手。并且可以指定每次是否从五子棋常见的26个开局中随机选取开局。
+board 有一个 move(position) 方法可以用来走棋，有size可以获取棋盘大小，可以用这两个方法来实现开局
+'''
+import random
 
 class Arena:
-  def __init__(self, board, ai1, ai2, size=15):
+  def __init__(self, board, ai1, ai2, random_opening=True):
     self.board = board
     self.ai1 = ai1
     self.ai2 = ai2
+    self.random_opening = random_opening
 
-  def start(self):
-    while self.board.get_winner() == 0:
-      if self.board.get_current_player_color() == 1:
-        move = self.ai1.move()
-        self.board.move(move)
-        print("AI 1 moved to position", move)
+  def get_random_opening(self):
+    center = self.board.size // 2
+    openings = [(center, center)]
+    second_d = random.choice([[0, 1], [1, 0], [0, -1], [-1, 0], [1, 1], [-1, -1], [1, -1], [-1, 1]])
+    third_d = random.choice([
+      [-2, -2], [-2, -1], [-2, 0], [-2, 1], [-2, 2],
+      [-1, -2], [-1, 2],
+      [0, -2], [0, 2],
+      [1, -2], [1, 2],
+      [2, -2], [2, -1], [2, 0], [2, 1], [2, 2],
+    ])
+    openings.append((second_d[0]+center, second_d[1]+center))
+    openings.append((third_d[0]+center, third_d[1]+center))
+    print('random opening', openings)
+    return openings
+  
+  def print(self, *args):
+    if self.verbose:
+      print(*args)
+
+  def start(self, match_count=20, verbose=True):
+    self.verbose = verbose
+    ai1 = self.ai1
+    ai2 = self.ai2
+    ai1_wins = 0
+    ai2_wins = 0
+    draws = 0
+    for _ in range(match_count):
+      board = self.board
+      if self.random_opening:
+        openings = self.get_random_opening()
+        for move in openings:
+          board.move(board.coordinate_to_position(move))
+
+      if verbose:
+        board.display()
+      while board.get_winner() == 0:
+        if board.get_current_player_color() == 1:
+          move = ai1.move()
+          board.move(move)
+          self.print("AI 1 moved to position", move)
+        else:
+          move = ai2.move()
+          board.move(move)
+          self.print("AI 2 moved to position", move)
+        if verbose:
+          board.display()
+
+      board.display()
+      winner_color = board.get_winner()
+      print('winner is ', winner_color)
+      if winner_color == 1:
+        if self.ai1 == ai1:
+          ai1_wins += 1
+          print("AI 1 wins!")
+        else:
+          ai2_wins += 1
+          print("AI 2 wins!")
+      elif winner_color == -1:
+        if self.ai2 == ai2:
+          ai2_wins += 1
+          print("AI 2 wins!")
+        else:
+          ai1_wins += 1
+          print("AI 1 wins!")
       else:
-        move = self.ai2.move()
-        self.board.move(move)
-        print("AI 2 moved to position", move)
-      self.board.display()
-    winner_color = self.board.get_winner()
-    if winner_color == 1:
-      print("AI 1 wins!")
-    else:
-      print("AI 2 wins!")
-    return winner_color
+          draws += 1
+      ai1, ai2 = ai2, ai1
+      self.board.reset()
+    return ai1_wins, ai2_wins, draws
+

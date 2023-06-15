@@ -25,19 +25,27 @@ import numpy as np
 
 # 以下是Chatgpt4.0 写的代码, 并做了少量修改
 
+
 class Board:
-  def __init__(self, size=15, first_player=1):
+  def __init__(self, size=15, first_player=1, win_count=5):
     self.size = size
     self.board = [[0 for _ in range(size)] for _ in range(size)]
     self.history = []
     self.current_player = first_player
+    self.first_player = first_player
+    self.win_count = win_count
+
+  def reset(self):
+    # 重置棋盘
+    self.board = [[0 for _ in range(self.size)] for _ in range(self.size)]
+    # 重置历史记录
+    self.history = []
+    # 重置当前玩家
+    self.current_player = self.first_player
 
   def move(self, position, color=None):
-    # 格式化position，如果是数组，转换成整数
-    if isinstance(position, list):
-      position = position[0]*self.size + position[1]
     if position not in self.get_valid_moves_all():
-      raise ValueError("Invalid move")
+      raise ValueError("Invalid move", position, self.get_valid_moves_all())
     if color is None:
       color = self.current_player
     x, y = position // self.size, position % self.size
@@ -67,7 +75,7 @@ class Board:
   def is_current_position_winning(self, position, directions=[(1, 0), (0, 1), (1, 1), (1, -1), (0, -1), (-1, 0), (-1, 1), (-1, -1)]):
     i, j = position // self.size, position % self.size
     for dx, dy in directions:
-      for k in range(1, 5):
+      for k in range(1, self.win_count):
         if i + k * dx < 0 or j + k * dy < 0 or i + k * dx >= self.size or j + k * dy >= self.size:
           break
         if self.board[i][j] != self.board[i + k * dx][j + k * dy]:
@@ -176,7 +184,7 @@ class Board:
     return self.size
 
   def copy(self):
-    new_board = Board(self.size, self.current_player)
+    new_board = Board(size=self.size, first_player=self.current_player, win_count=self.win_count)
     new_board.board = copy.deepcopy(self.board)
     new_board.history = copy.deepcopy(self.history)
     return new_board
