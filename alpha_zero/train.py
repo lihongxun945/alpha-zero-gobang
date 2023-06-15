@@ -16,7 +16,7 @@ checkpoint_file = os.path.join(checkpoint_dir, 'best_checkpoint.h5')
 data_file = os.path.join(checkpoint_dir, 'train_data.pkl')
 
 class Train:
-  def __init__(self, board, ai, net, iterations=100, iteration_epochs=100, train_data_limit=2000, load_checkpoint=False, temp_threshold=30):
+  def __init__(self, board, ai, net, iterations=100, iteration_epochs=100, train_data_limit=2000, load_checkpoint=False, temp_threshold=20):
     self.board = board
     self.ai = ai
     self.net = net
@@ -77,8 +77,8 @@ class Train:
 
       epoch_data = []
       while not board.is_game_over():
-        action = self.ai.move(temp=int(epoch_steps < self.temp_threshold))
-        x, y = board.get_data(action)
+        action = self.ai.move(int(epoch_steps <= self.temp_threshold))
+        x, y = board.get_simple_data(action)
         epoch_data.extend(board.enhance_data(x, y))
         board.move(action)
         epoch_steps += 1

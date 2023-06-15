@@ -23,7 +23,7 @@ epochs = 20
 class Net:
   def __init__(self, size=15):
     self.size = size
-    self.build_model()
+    self.build_simple_model()
 
   def build_simple_model(self):
     # game params

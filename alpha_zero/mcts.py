@@ -109,7 +109,7 @@ class MCTS:
       node.update_recursive(-value)
       return winner
     else:
-      train_data = board_copy.get_data()
+      train_data = board_copy.get_simple_data()
       train_data = np.expand_dims(train_data, axis=0)  # 转换为四维张量，因为模型需要 batch 维度
       board_string = board_copy.get_board_string()
       predict = None
@@ -155,7 +155,7 @@ class MCTS:
       self._simulate(color)
 
     # 选最优解
-    if temp == 0:
+    if temp < 0.1:
       action = max(self.root.children.items(), key=lambda act_node: act_node[1].N)[0]
       return action
 
