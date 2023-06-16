@@ -55,7 +55,7 @@ class Arena:
 
       if verbose:
         board.display()
-      while board.get_winner() == 0:
+      while not board.is_game_over():
         if board.get_current_player_color() == 1:
           move = ai1.move()
           board.move(move)
