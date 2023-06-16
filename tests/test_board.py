@@ -154,7 +154,7 @@ class TestBoard(unittest.TestCase):
     board.move(8, 1)  # 黑子下在 (2,2)
     board.move(7, -1)  # 白子下在 (2,1)
 
-    x, y = board.get_data(7)
+    x = board.get_data()
 
     # 验证棋盘状态 x
     self.assertEqual(x.shape, (17, 3, 3))  # x 的形状应为 (3, 3, 17)
@@ -173,16 +173,13 @@ class TestBoard(unittest.TestCase):
     # 验证当前玩家颜色
     self.assertTrue(np.all(x[16, :, :] == 1))  # 最后一个平面应全为 1，因为该黑棋了
 
-    # 验证胜负情况和落子概率
-    self.assertEqual(y[0], 0)  # 胜负情况应为 0，因为游戏还没结束
-    self.assertTrue(np.all(y[1] == np.array([0, 0, 0, 0, 0, 0, 0, 1, 0])))  # 最后一步的落子概率应为 1，其他位置的概率应为 0
-
   def test_enhance_data(self):
     board = Board(size=3)
     board.move(0)  # 黑子下在 (0,0)
     board.move(2)  # 黑子下在 (0,0)
     board.move(3)  # 黑子下在 (0,0)
-    x, y = board.get_data(6)
+    x = board.get_data()
+    y = [0, np.array([0, 1, 0.5, 0, 0, 0, 0, 0, 0])]
     data_original, data_horizontal_flip, data_vertical_flip = board.enhance_data(x, y)
 
     # 分开比较 y 的两个元素

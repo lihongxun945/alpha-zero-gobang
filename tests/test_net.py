@@ -17,7 +17,7 @@ class TestNet(unittest.TestCase):
 
   def test_predict(self):
     board = Board(self.size)
-    x, y = board.get_data(100)
+    x = board.get_data()
     x = np.expand_dims(x, axis=0)  # 转换为四维张量，因为模型需要 batch 维度
     # self.net.model.summary()
     probs, value = self.net.predict(x)
@@ -26,7 +26,8 @@ class TestNet(unittest.TestCase):
 
   def test_train(self):
     board = Board(self.size)
-    x, y = board.get_data(100)
+    x = board.get_data()
+    y = [0, np.zeros(self.size*self.size)]
     x = np.expand_dims(x, axis=0)  # 转换为四维张量，因为模型需要 batch 维度
     v, pi = y[0], y[1]
     v = np.array([v])

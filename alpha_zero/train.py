@@ -22,7 +22,6 @@ data_file = os.path.join(checkpoint_dir, 'train_data.pkl')
 
 accept_threshold = 0.6
 pitting_count = 20
-v_reduce = 0.8
 
 class Train:
   def __init__(self, board, ai, net, prev_net, iterations=100, iteration_epochs=100, train_data_limit=2000, load_checkpoint=False, temp_threshold=20):
@@ -85,7 +84,7 @@ class Train:
       prev_ai = MCTSPlayer(board=self.board, net=self.prev_net, simulation_num=self.ai.simulation_num)
       current_ai = MCTSPlayer(board=self.board, net=self.net, simulation_num=self.ai.simulation_num)
 
-      area = Arena(board=self.board, ai1=prev_ai, ai2=current_ai, random_opening=True)
+      area = Arena(board=self.board, ai1=current_ai, ai2=prev_ai, random_opening=True)
       wins, fails, draws = area.start(match_count=pitting_count, verbose=False)
 
       print(f"Pit result, new ai Wins: {wins}, Fails: {fails}, Draws: {draws}")
@@ -140,9 +139,8 @@ class Train:
       print('#epoch', epoch, ', step ', epoch_steps, 'winner', winner)
       board.display()
       print('history:', [[[h[0]//board.size, h[0]%board.size], h[1]] for h in board.history])
-      for i in range(len(epoch_data)):
-        data = epoch_data[i]
-        iteration_data.append([data[0], v_reduce ** (epoch_steps - i) * winner, data[1][1]])
+      for data in epoch_data:
+        iteration_data.append([data[0], winner, data[1][1]])
     print('summary: black wins', black_wins, 'white wins', white_wins, 'draws', draws)
     self.ai.displayPerformance()
 
