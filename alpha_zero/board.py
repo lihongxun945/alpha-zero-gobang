@@ -45,6 +45,7 @@ class Board:
 
   def move(self, position, color=None):
     if position not in self.get_valid_moves_all():
+      self.display()
       raise ValueError("Invalid move", position, self.get_valid_moves_all())
     if color is None:
       color = self.current_player
@@ -210,7 +211,7 @@ class Board:
   最后一层是一个标量特征平面，表示当前玩家的颜色（1表示黑棋，-1表示白棋）。
   这 17 层的平面堆叠在一起，为神经网络提供了关于当前游戏状态的全面信息。神经网络通过这些输入来预测每一步的最佳动作和最终游戏结果。
   '''
-  def get_data(self, next_action=None):
+  def get_data(self):
     x = np.zeros((17, self.size, self.size), dtype=np.int8)
     # 填充棋盘状态
     history_len = len(self.history)
@@ -241,37 +242,13 @@ class Board:
 
     # 最后一个平面表示当前轮到哪一方落子
     x[-1, :, :] = self.current_player  # 全部的值都是当前角色
-
-    if next_action is None:
-      return x
-
-    v = self.get_winner()  # 胜负情况
-
-    # 创建一个全零向量表示落子概率
-    pi = np.zeros(self.size * self.size)
-    pi[next_action] = 1
-
-    y = [v, pi]
-
-    return x, y
+    return x
 
   # 获取当前棋盘的数据
   # 不同于Alpha Zero，我们的神经网络输入只有 2 个平面，分别表示当前玩家的棋子分布和对手的棋子分布。这样做的好处是训练比较简单
-  def get_simple_data(self, next_action=None):
+  def get_simple_data(self):
     x = np.array(self.board)
-
-    if next_action is None:
-      return x
-
-    v = self.get_winner()  # 胜负情况
-
-    # 创建一个全零向量表示落子概率
-    pi = np.zeros(self.size * self.size)
-    pi[next_action] = 1
-
-    y = [v, pi]
-
-    return x, y
+    return x
 
 
   def is_game_over(self):

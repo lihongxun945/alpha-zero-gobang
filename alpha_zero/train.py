@@ -118,8 +118,14 @@ class Train:
 
       epoch_data = []
       while not board.is_game_over():
-        action = self.ai.move(int(epoch_steps <= self.temp_threshold))
-        x, y = board.get_simple_data(action)
+        temp = int(epoch_steps <= self.temp_threshold)
+        probs = self.ai.getActionProbs(temp=temp)
+        if temp < 0.1:
+          action = np.argmax(probs)
+        else:
+          action = np.random.choice(len(probs), p=probs)
+        x = board.get_simple_data()
+        y = [0, probs]
         epoch_data.extend(board.enhance_data(x, y))
         board.move(action)
         epoch_steps += 1
@@ -134,7 +140,7 @@ class Train:
       print('#epoch', epoch, ', step ', epoch_steps, 'winner', winner)
       board.display()
       print('history:', [[[h[0]//board.size, h[0]%board.size], h[1]] for h in board.history])
-      for i in len(epoch_data):
+      for i in range(len(epoch_data)):
         data = epoch_data[i]
         iteration_data.append([data[0], v_reduce ** (epoch_steps - i) * winner, data[1][1]])
     print('summary: black wins', black_wins, 'white wins', white_wins, 'draws', draws)

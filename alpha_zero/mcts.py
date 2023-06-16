@@ -146,7 +146,8 @@ class MCTS:
       node.update_recursive(0)
       return 0
 
-  def move(self, color=None, verbose=False, temp=1):
+  # 返回概率分布
+  def getActionProbs(self, color=None, temp=1):
     self.root = Node()  # reset the root node
     if color is None:
       color = self.board.get_current_player_color()
@@ -154,16 +155,24 @@ class MCTS:
     for _ in range(self.simulation_num):
       self._simulate(color)
 
-    # 选最优解
-    if temp < 0.1:
-      action = max(self.root.children.items(), key=lambda act_node: act_node[1].N)[0]
-      return action
-
     action_probs = np.zeros(self.board.size * self.board.size)
+    if temp == 0:
+      action, node = max(self.root.children.items(), key=lambda act_node: act_node[1].N)
+      action_probs[action] = 1
+      return action_probs
     for action, node in self.root.children.items():
       action_probs[action] = node.N ** (1 / temp)
     action_probs /= np.sum(action_probs)
-    return np.random.choice(np.arange(len(action_probs)), p=action_probs)
+    return action_probs
+
+  # 直接选取最优解返回，根据温度决定是否使用概率分布
+  def move(self, color=None, temp=1):
+    action_probs = self.getActionProbs(color, temp)
+
+    if temp == 0:
+      return np.argmax(action_probs)
+    else:
+      return np.random.choice(len(action_probs), p=action_probs)
 
   def set_board(self, board):
     self.board = board
