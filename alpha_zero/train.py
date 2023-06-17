@@ -91,15 +91,17 @@ class Train:
       self.pitting_history.append(wins/(wins+fails))
       print("pitting history:", self.pitting_history)
 
-      if wins/(wins+fails) > accept_threshold:
+      if wins/(wins+fails) >= accept_threshold:
         print("Accept!!! Saving checkpoint...")
         self.net.save(checkpoint_file)
-        self.train_data_history = train_data
-        with open(data_file, 'wb+') as f:
-          pickle.dump(self.train_data_history, f)
+
       else:
         print("Discarding checkpoint...")
         self.net.load(tmp_checkpoint_file)
+      # 即使没有赢，应该也是存下来比较好
+      self.train_data_history = train_data
+      with open(data_file, 'wb+') as f:
+        pickle.dump(self.train_data_history, f)
 
   def _run_iteration(self):
     self.ai.reset()
