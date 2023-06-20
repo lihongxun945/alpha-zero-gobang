@@ -112,6 +112,7 @@ class Train:
     draws = 0
     for epoch in tqdm(range(self.iteration_epochs), desc="Self Play"):
       board = self.board.copy()
+      size = board.size
 
       epoch_steps = 0
 
@@ -121,13 +122,16 @@ class Train:
       while not board.is_game_over():
         temp = int(epoch_steps <= self.temp_threshold)
         probs = self.ai.getActionProbs(temp=temp)
-        if temp < 0.1:
-          action = np.argmax(probs)
+        # print(np.array(probs).reshape(size, size))
+        if temp == 0:
+          max_indices = np.argwhere(probs == np.amax(probs)).flatten()
+          action = np.random.choice(max_indices)
         else:
           action = np.random.choice(len(probs), p=probs)
         x = board.get_simple_data()
         y = [0, probs]
         epoch_data.extend(board.enhance_data(x, y))
+        # print('move:', action // size, action % size)
         board.move(action)
         epoch_steps += 1
 

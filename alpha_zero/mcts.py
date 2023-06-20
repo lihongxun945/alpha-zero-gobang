@@ -47,7 +47,7 @@ class Node:
   def update(self, value):
     if show_search_debug_info:
       if self.action:
-        print('update node:', self.action//11, self.action%11, value)
+        print('update node:', (self.action//5, self.action%5), value)
       else:
         print('update root node:', value)
     self.N += 1
@@ -105,7 +105,7 @@ class MCTS:
       winner = board_copy.get_winner()
       value = 1 if winner == board_copy.get_current_player_color() else -1
       if show_search_debug_info:
-        print('game over update', winner, -value)
+        print('game over update: winner ', winner, 'value ', -value)
       node.update_recursive(-value)
       return winner
     else:
@@ -125,6 +125,7 @@ class MCTS:
       action_probs, v = predict
       if show_search_debug_info:
         print('predict probs', np.array([int(i*1000) for i in action_probs]).reshape(self.board.size, self.board.size))
+        print('predict Q', np.array([(i[0], round(i[1].Q, 2)) for i in self.root.children.items()]))
         print('predict value', v)
       # 顶层节点使用 dirichlet 噪声
       if self.self_play and node.parent == self.root:
@@ -138,10 +139,9 @@ class MCTS:
         action_probs = action_probs + board_copy.get_valid_moves_mask()
         action_probs = action_probs / np.sum(action_probs)
       v = v[0]
-      # print('expand', action_probs[0], v[0][0])
       node.expand(action_probs, color*v) # Q是当前玩家的胜率，所以要乘以玩家角色
       if show_search_debug_info:
-        print('update:', -v*color)
+        print('mcts expand:', action_probs.reshape(self.board.size, self.board.size), v)
       # node.update_recursive(-v*color) # 这样更新会导致预测的胜率总是不准确，无法训练出有效的AI，应该还是返回0比较好
       node.update_recursive(0)
       return 0
@@ -156,8 +156,17 @@ class MCTS:
       self._simulate(color)
 
     action_probs = np.zeros(self.board.size * self.board.size)
+    if show_search_debug_info:
+      ns = [(i[0], i[1].N) for i in self.root.children.items()]
+      size = self.board.size
+      ps = np.zeros(size*size)
+      for i in ns:
+        ps[i[0]] = i[1]
+      print(ps.reshape(size, size))
     if temp == 0:
-      action, node = max(self.root.children.items(), key=lambda act_node: act_node[1].N)
+      max_value = max(node.N for node in self.root.children.values())
+      actions_with_max_value = [action for action, node in self.root.children.items() if node.N == max_value]
+      action = np.random.choice(actions_with_max_value)
       action_probs[action] = 1
       return action_probs
     for action, node in self.root.children.items():
@@ -170,7 +179,9 @@ class MCTS:
     action_probs = self.getActionProbs(color, temp)
 
     if temp == 0:
-      return np.argmax(action_probs)
+      max_indices = np.argwhere(action_probs == np.amax(action_probs)).flatten()
+      action = np.random.choice(max_indices)
+      return action
     else:
       return np.random.choice(len(action_probs), p=action_probs)
 
