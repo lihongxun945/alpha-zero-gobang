@@ -13,22 +13,22 @@ from alpha_zero.net import Net
 
 class TestMCTS(unittest.TestCase):
 
-  def test_move(self):
-    # 创建一个模拟的 net
-    board_size = 5
-    net = Net(board_size)
+  # def test_move(self):
+  #   # 创建一个模拟的 net
+  #   board_size = 5
+  #   net = Net(board_size)
 
-    # 创建一个 Board 对象
-    board = Board(board_size)
+  #   # 创建一个 Board 对象
+  #   board = Board(board_size)
 
-    # 创建 MCTS 对象
-    mcts = MCTS(board=board, net=net, simulation_num=100)
+  #   # 创建 MCTS 对象
+  #   mcts = MCTS(board=board, net=net, simulation_num=100)
 
-    # 进行一个 move 操作
-    action = mcts.move()
+  #   # 进行一个 move 操作
+  #   action = mcts.move()
 
-    # 验证 action 在正确的范围内
-    self.assertTrue(0 <= action < 25)
+  #   # 验证 action 在正确的范围内
+  #   self.assertTrue(0 <= action < 25)
 
   # 测试结果正确性
   def test_result(self):

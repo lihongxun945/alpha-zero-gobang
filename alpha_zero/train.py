@@ -63,7 +63,7 @@ class Train:
 
       # If the training data exceeds the limit, remove the oldest data.
       if len(train_data) > self.data_limit:
-        del train_data[:len(self.train_data) - self.data_limit]
+        del train_data[:len(train_data) - self.data_limit]
         print('train_data length after remove out of limit:', len(train_data))
 
       print("Training...")

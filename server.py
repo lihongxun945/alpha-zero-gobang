@@ -58,7 +58,7 @@ def create_session():
     'mcts': mcts
   }
 
-  return jsonify({'session_id': session_id})
+  return get_session(session_id)
 
 @app.route('/get_session/<session_id>', methods=['GET'])
 def get_session(session_id):
