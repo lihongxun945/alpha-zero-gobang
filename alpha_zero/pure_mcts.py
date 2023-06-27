@@ -32,9 +32,9 @@ class Node:
       if action not in self.children:
         self.children[action] = Node(parent=self)
 
-  def select(self, simulate_count):
+  def select(self):
     return max(self.children.items(),
-               key=lambda node: node[1].get_value() + math.sqrt(math.log(simulate_count) / node[1].visit_count))
+               key=lambda node: node[1].get_value() + math.sqrt(math.log(self.N) / node[1].visit_count))
 
   def update(self, reward):
     self.visit_count += 1
@@ -76,7 +76,7 @@ class PureMCTS:
         break
       if node.is_leaf():
         node.expand([(move, 1.0) for move in valid_moves])
-      move, node = node.select(node.visit_count)
+      move, node = node.select()
       board_copy.move(move, color)
       color = -color
 

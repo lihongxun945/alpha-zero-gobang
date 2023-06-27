@@ -13,12 +13,12 @@ import numpy as np
 import time
 
 c_puct = 1
-enable_cache = True
 show_search_debug_info = False
+EPS = 1e-8
 
 class Node:
-  def __init__(self, parent=None, P=0, Q=0, action=None):
-    self.N = 1  # visit count
+  def __init__(self, parent=None, P=0, Q=None, action=None):
+    self.N = 0  # visit count
     self.Q = Q  # mean action value
     self.P = P  # prior probability
     self.action = action # 移动位置
@@ -32,17 +32,28 @@ class Node:
   def is_root(self):
     return self.parent is None
 
-  def select(self, total_count):
-    action, node = max(self.children.items(),
-               key=lambda act_node: act_node[1].Q + c_puct * act_node[1].P * (np.sqrt(total_count) / (1 + act_node[1].N)))
-    return action, node
+  def select(self):
+    best_u = -float('inf')
+    best_node = None
+    best_action = None
+    for action, node in self.children.items():
+      u = None
+      if node.Q is None:
+        u = c_puct * node.P * np.sqrt(self.N + EPS)
+      else:
+        u = node.Q + c_puct * node.P * (np.sqrt(self.N) / (1 + node.N))
+      if u > best_u:
+        best_u = u
+        best_node = node
+        best_action = action
+    return best_action, best_node
 
   def expand(self, action_priors, v=0):
     for action in range(0, len(action_priors)):
       prob = action_priors[action]
       if action not in self.children:
         if prob > 0:
-          self.children[action] = Node(parent=self, P=prob, Q=v, action=action)
+          self.children[action] = Node(parent=self, P=prob, Q=None, action=action)
 
   def update(self, value):
     if show_search_debug_info:
@@ -50,8 +61,12 @@ class Node:
         print('update node:', (self.action//5, self.action%5), value)
       else:
         print('update root node:', value)
-    self.N += 1
-    self.Q = (self.N * self.Q + value) / (self.N + 1)
+    if self.Q is None:
+      self.Q = value
+      self.N = 1
+    else:
+      self.Q = (self.N * self.Q + value) / (self.N + 1)
+      self.N += 1
 
   def update_recursive(self, value):
     if not self.is_root():
@@ -90,7 +105,7 @@ class MCTS:
     if show_search_debug_info:
       print('simulating...')
     while not node.is_leaf():
-      action, node = node.select(self.root.N)
+      action, node = node.select()
       # print('select', action, node)
       board_copy.move(action, color)
       if show_search_debug_info:
@@ -112,23 +127,20 @@ class MCTS:
       train_data = board_copy.get_simple_data()
       train_data = np.expand_dims(train_data, axis=0)  # 转换为四维张量，因为模型需要 batch 维度
       board_string = board_copy.get_board_string()
-      predict = None
-      if enable_cache and board_string in self.predict_cache:
-        predict = self.predict_cache[board_string]
+      action_probs = None
+      v = None
+      if self.self_play and board_string in self.predict_cache:
+        action_probs, v = self.predict_cache[board_string]
         self.predict_cache_hit += 1
       else:
         predict_start_time = time.time()
-        predict = self.net.predict(train_data)
+        action_probs, v = self.net.predict(train_data)
         self.performance_predict_time += time.time() - predict_start_time
         self.performance_predict_count += 1
-        self.predict_cache[board_string] = predict
-      action_probs, v = predict
-      if show_search_debug_info:
-        print('predict probs', np.array([int(i*1000) for i in action_probs]).reshape(self.board.size, self.board.size))
-        print('predict Q', np.array([(i[0], round(i[1].Q, 2)) for i in self.root.children.items()]))
-        print('predict value', v)
+        if self.self_play:
+          self.predict_cache[board_string] = (action_probs, v)
       # 顶层节点使用 dirichlet 噪声
-      if self.self_play and node.parent == self.root:
+      if self.self_play and node == self.root:
         action_probs = 0.75*action_probs + 0.25 * np.random.dirichlet(0.03*np.ones(len(action_probs)))
       action_probs = action_probs * board_copy.get_valid_moves_mask()
       sum = np.sum(action_probs)
@@ -138,12 +150,17 @@ class MCTS:
         print('all valid moves have 0 probability, use workaround')
         action_probs = action_probs + board_copy.get_valid_moves_mask()
         action_probs = action_probs / np.sum(action_probs)
+
+      if show_search_debug_info:
+        print('predict probs', np.array([int(i*1000) for i in action_probs]).reshape(self.board.size, self.board.size))
+        print('predict Q', np.array([(i[0], round(i[1].Q, 2)) for i in self.root.children.items()]))
+        print('predict value', v)
+      
       v = v[0]
       node.expand(action_probs, color*v) # Q是当前玩家的胜率，所以要乘以玩家角色
       if show_search_debug_info:
         print('mcts expand:', action_probs.reshape(self.board.size, self.board.size), v)
-      # node.update_recursive(-v*color) # 这样更新会导致预测的胜率总是不准确，无法训练出有效的AI，应该还是返回0比较好
-      node.update_recursive(0)
+      node.update_recursive(-v*color)
       return 0
 
   # 返回概率分布

@@ -23,15 +23,15 @@ class Arena:
     center = self.board.size // 2
     openings = [(center, center)]
     second_d = random.choice([[0, 1], [1, 0], [0, -1], [-1, 0], [1, 1], [-1, -1], [1, -1], [-1, 1]])
-    third_d = random.choice([
-      [-2, -2], [-2, -1], [-2, 0], [-2, 1], [-2, 2],
-      [-1, -2], [-1, 2],
-      [0, -2], [0, 2],
-      [1, -2], [1, 2],
-      [2, -2], [2, -1], [2, 0], [2, 1], [2, 2],
-    ])
+    # third_d = random.choice([
+    #   [-2, -2], [-2, -1], [-2, 0], [-2, 1], [-2, 2],
+    #   [-1, -2], [-1, 2],
+    #   [0, -2], [0, 2],
+    #   [1, -2], [1, 2],
+    #   [2, -2], [2, -1], [2, 0], [2, 1], [2, 2],
+    # ])
     openings.append((second_d[0]+center, second_d[1]+center))
-    openings.append((third_d[0]+center, third_d[1]+center))
+    # openings.append((third_d[0]+center, third_d[1]+center))
     print('random opening', openings)
     return openings
   
