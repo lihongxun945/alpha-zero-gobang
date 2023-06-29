@@ -70,7 +70,7 @@ class Arena:
       board.display()
       winner_color = board.get_winner()
       print('winner is: ', winner_color)
-      print('history:', board.history)
+      print('history:', [[[h[0]//board.size, h[0]%board.size], h[1]] for h in board.history])
       if winner_color == 1:
         if self.ai1 == ai1:
           ai1_wins += 1

@@ -40,9 +40,10 @@ TODO
 
 ## 参考代码
 
-主要参考了如下两个项目的代码：
+主要参考了如下项目的代码：
 - [alpha-zero-general](https://github.com/suragnair/alpha-zero-general)
 - [Alpha-Gobang-Zero](https://github.com/zhiyiYo/Alpha-Gobang-Zero)
+- [minigo](https://github.com/tensorflow/minigo/blob/master/mcts.py)
 
 非常感谢上述两个项目的作者，你们的开源项目和博客给我非常大的帮助。业余研究使用，有任何错误欢迎指正。
 

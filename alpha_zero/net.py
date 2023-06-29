@@ -18,7 +18,7 @@ from tensorflow.keras.optimizers import Adam
 import numpy as np
 
 lr = 0.001
-epochs = 20
+epochs = 10
 
 class Net:
   def __init__(self, size=15):

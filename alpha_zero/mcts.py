@@ -127,6 +127,7 @@ class MCTS:
       train_data = board_copy.get_simple_data()
       train_data = np.expand_dims(train_data, axis=0)  # 转换为四维张量，因为模型需要 batch 维度
       board_string = board_copy.get_board_string()
+      valid_moves_mask = board_copy.get_valid_moves_mask()
       action_probs = None
       v = None
       if self.self_play and board_string in self.predict_cache:
@@ -139,10 +140,10 @@ class MCTS:
         self.performance_predict_count += 1
         if self.self_play:
           self.predict_cache[board_string] = (action_probs, v)
-      # 顶层节点使用 dirichlet 噪声
-      if self.self_play and node == self.root:
-        action_probs = 0.75*action_probs + 0.25 * np.random.dirichlet(0.03*np.ones(len(action_probs)))
-      action_probs = action_probs * board_copy.get_valid_moves_mask()
+
+      action_probs = action_probs * valid_moves_mask
+
+      # 先normalize，再加噪声
       sum = np.sum(action_probs)
       if sum > 0:
         action_probs = action_probs / sum
@@ -150,6 +151,13 @@ class MCTS:
         print('all valid moves have 0 probability, use workaround')
         action_probs = action_probs + board_copy.get_valid_moves_mask()
         action_probs = action_probs / np.sum(action_probs)
+
+      # 顶层节点使用 dirichlet 噪声
+      if self.self_play and node == self.root:
+        # 创建一个与action_probs长度相同的，但只在有效动作位置上具有非零值的向量，用于狄利克雷噪声
+        dirichlet_noise_mask = np.where(valid_moves_mask > 0, 1, 1e-8)
+        dirichlet_noise = np.random.dirichlet(0.03 * dirichlet_noise_mask)
+        action_probs = 0.75*action_probs + 0.25 * dirichlet_noise
 
       if show_search_debug_info:
         print('predict probs', np.array([int(i*1000) for i in action_probs]).reshape(self.board.size, self.board.size))
