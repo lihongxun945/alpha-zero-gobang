@@ -49,10 +49,9 @@ class Train:
     for i in range(self.iterations):
       self.iteration += 1
       # 动态学习速率
-      lr = 0.001 if self.iteration < learning_rate_threshold else 0.0001
-      print('set learning rate to', lr)
-      self.net.build_simple_model(lr)
-      print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Starting iteration {self.iteration}/{self.iterations}...")
+      lr = 0.001 if self.iteration <= learning_rate_threshold else 0.0001
+      self.net.set_lr(lr)
+      print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Starting iteration {self.iteration}/{self.iterations}, current lr {self.net.model.optimizer.lr.numpy()}...")
       iteration_data = self._run_iteration()
 
       # make new train data
