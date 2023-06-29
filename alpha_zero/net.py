@@ -114,4 +114,7 @@ class Net:
     self.model.load_weights(filepath)
 
   def set_lr(self, lr):
-    self.model.optimizer.lr = lr
+    self.model.optimizer.lr.assign(lr)
+
+  def get_lr(self):
+    return self.model.optimizer.lr.read_value()
