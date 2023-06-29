@@ -17,15 +17,15 @@ from tensorflow.keras.applications import ResNet50
 from tensorflow.keras.optimizers import Adam
 import numpy as np
 
-lr = 0.001
-epochs = 10
+default_lr = 0.001
+epochs = 20
 
 class Net:
   def __init__(self, size=15):
     self.size = size
     self.build_simple_model()
 
-  def build_simple_model(self):
+  def build_simple_model(self, lr=default_lr):
     # game params
     num_channels = 512
     self.action_size = self.size * self.size
@@ -53,7 +53,7 @@ class Net:
     self.model = Model(inputs=self.input_boards, outputs=[self.pi, self.v])
     self.model.compile(loss=['categorical_crossentropy', 'mean_squared_error'], optimizer=Adam(lr))
 
-  def build_model(self):
+  def build_model(self, lr=default_lr):
     residual_blocks=9 # 根据AlphzZero论文，这里是19或39个残差块。为了在小棋盘上迅速验证效果，这里进行适当缩减
     input_shape=(17, self.size, self.size)
     # Step 1: 256 filters of kernel size 3x3 with stride 1

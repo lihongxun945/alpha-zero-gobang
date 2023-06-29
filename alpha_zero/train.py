@@ -14,18 +14,14 @@ from random import shuffle
 from alpha_zero.players import MCTSPlayer
 from alpha_zero.arena import Arena
 from copy import deepcopy
-
-checkpoint_dir = 'checkpoint'
-checkpoint_file = os.path.join(checkpoint_dir, 'best_checkpoint.h5')
-tmp_checkpoint_file = os.path.join(checkpoint_dir, 'tmp_checkpoint.h5')
-data_file = os.path.join(checkpoint_dir, 'train_data.pkl')
-meta_file = os.path.join(checkpoint_dir, 'meta.pkl')
+from datetime import datetime
 
 accept_threshold = 0.6
 pitting_count = 20
+learning_rate_threshold = 20
 
 class Train:
-  def __init__(self, board, ai, net, prev_net, iterations=100, iteration_epochs=100, train_data_limit=2000, load_checkpoint=False, temp_threshold=20):
+  def __init__(self, board, ai, net, prev_net, iterations=100, iteration_epochs=100, train_data_limit=200000, load_checkpoint=False, temp_threshold=20):
     self.board = board
     self.ai = ai
     self.net = net
@@ -38,13 +34,25 @@ class Train:
     self.temp_threshold = temp_threshold
     self.train_data_history = []
     self.pitting_history = []
+    self.init_file_path()
+  
+  def init_file_path(self):
+    self.checkpoint_dir = f'checkpoint_{self.board.size}'
+    self.checkpoint_file = os.path.join(self.checkpoint_dir, 'best_checkpoint.h5')
+    self.tmp_checkpoint_file = os.path.join(self.checkpoint_dir, 'tmp_checkpoint.h5')
+    self.data_file = os.path.join(self.checkpoint_dir, 'train_data.pkl')
+    self.meta_file = os.path.join(self.checkpoint_dir, 'meta.pkl')
 
   def start(self):
     if self.load_checkpoint:
       self.load_all_data()
     for i in range(self.iterations):
       self.iteration += 1
-      print(f"Starting iteration {self.iteration}/{self.iterations}...")
+      # 动态学习速率
+      lr = 0.001 if self.iteration < learning_rate_threshold else 0.0001
+      print('set learning rate to', lr)
+      self.net.build_simple_model(lr)
+      print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Starting iteration {self.iteration}/{self.iterations}...")
       iteration_data = self._run_iteration()
 
       # make new train data
@@ -66,8 +74,8 @@ class Train:
 
       X, y_v, y_p = zip(*shuffled_train_data)
 
-      self.net.save(tmp_checkpoint_file)
-      self.prev_net.load(tmp_checkpoint_file)
+      self.net.save(self.tmp_checkpoint_file)
+      self.prev_net.load(self.tmp_checkpoint_file)
 
       # do the training
       self.net.train(np.array(X), np.array(y_v), np.array(y_p))
@@ -85,14 +93,14 @@ class Train:
 
       if wins/(wins+fails) >= accept_threshold:
         print("Accept!!! Saving checkpoint...")
-        self.net.save(checkpoint_file)
+        self.net.save(self.checkpoint_file)
 
       else:
         print("Discarding checkpoint...")
-        self.net.load(tmp_checkpoint_file)
+        self.net.load(self.tmp_checkpoint_file)
       # 即使没有赢，应该也是存下来比较好
       self.train_data_history = train_data
-      with open(data_file, 'wb+') as f:
+      with open(self.data_file, 'wb+') as f:
         pickle.dump(self.train_data_history, f)
 
       # 保存元数据
@@ -151,25 +159,25 @@ class Train:
     if not self.load_checkpoint:
       return None
     # 创建文件夹
-    if not os.path.exists(checkpoint_dir):
-      print("create checkpoint directory: {}".format(checkpoint_dir))
-      os.mkdir(checkpoint_dir)
-    print('loading checkpoint from', checkpoint_file)
-    self.net.load(checkpoint_file)
+    if not os.path.exists(self.checkpoint_dir):
+      print("create checkpoint directory: {}".format(self.checkpoint_dir))
+      os.mkdir(self.checkpoint_dir)
+    print('loading checkpoint from', self.checkpoint_file)
+    self.net.load(self.checkpoint_file)
     print('checkpoint loaded success')
-    with open(data_file, 'rb') as f:
-      print('loading train_data from', data_file)
+    with open(self.data_file, 'rb') as f:
+      print('loading train_data from', self.data_file)
       self.train_data_history = pickle.load(f)
     print('train_data loaded success, total length :', len(self.train_data_history))
-    print('loading meta from ', meta_file)
-    with open(meta_file, 'rb') as f:
+    print('loading meta from ', self.meta_file)
+    with open(self.meta_file, 'rb') as f:
       history_data = pickle.load(f)
       self.iteration = history_data["iteration"]
       self.pitting_history = history_data["pitting_history"]
       print('meta loaded success, iteration:', self.iteration, 'pitting_history:', self.pitting_history)
 
   def save_meta(self):
-    with open(meta_file, 'wb+') as f:
+    with open(self.meta_file, 'wb+') as f:
       history_data = {
         "iteration": self.iteration,
         "pitting_history": self.pitting_history
