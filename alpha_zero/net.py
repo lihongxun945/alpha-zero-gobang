@@ -18,7 +18,7 @@ from tensorflow.keras.optimizers import Adam
 import numpy as np
 
 lr = 0.001
-epochs = 20
+epochs = 10
 
 class Net:
   def __init__(self, size=15):
@@ -61,7 +61,7 @@ class Net:
     x = Conv2D(256, 3, padding="same", strides=1)(inputs)
     x = BatchNormalization(axis=-1)(x)
     x = Activation("relu")(x)
-  
+
     # Step 2: 19 or 39 residual blocks
     for _ in range(residual_blocks):
         residual_input = x
@@ -75,14 +75,14 @@ class Net:
         # Add skip connection
         x = Add()([x, residual_input])
         x = Activation("relu")(x)
-  
+
     # Step 3: Policy head
     policy_head = Conv2D(2, 1, padding="same", strides=1)(x)
     policy_head = BatchNormalization(axis=-1)(policy_head)
     policy_head = Activation("relu")(policy_head)
     policy_head = Flatten()(policy_head)
     policy_head = Dense(self.size * self.size, activation="softmax", name="policy_head")(policy_head)
-  
+
     # Step 4: Value head
     value_head = Conv2D(1, 1, padding="same", strides=1)(x)
     value_head = BatchNormalization(axis=-1)(value_head)
@@ -90,7 +90,7 @@ class Net:
     value_head = Flatten()(value_head)
     value_head = Dense(256, activation="relu")(value_head)
     value_head = Dense(1, activation="tanh", name="value_head")(value_head)
-  
+
     self.model = Model(inputs=inputs, outputs=[policy_head, value_head])
     self.model.compile(optimizer=Adam(lr), loss=["categorical_crossentropy", "mean_squared_error"])
 

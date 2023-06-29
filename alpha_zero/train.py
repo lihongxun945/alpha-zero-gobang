@@ -19,6 +19,7 @@ checkpoint_dir = 'checkpoint'
 checkpoint_file = os.path.join(checkpoint_dir, 'best_checkpoint.h5')
 tmp_checkpoint_file = os.path.join(checkpoint_dir, 'tmp_checkpoint.h5')
 data_file = os.path.join(checkpoint_dir, 'train_data.pkl')
+meta_file = os.path.join(checkpoint_dir, 'meta.pkl')
 
 accept_threshold = 0.6
 pitting_count = 20
@@ -29,6 +30,7 @@ class Train:
     self.ai = ai
     self.net = net
     self.prev_net = prev_net
+    self.iteration = 0
     self.iterations = iterations
     self.iteration_epochs = iteration_epochs
     self.data_limit = train_data_limit
@@ -38,21 +40,11 @@ class Train:
     self.pitting_history = []
 
   def start(self):
-    # 创建文件夹
-    if not os.path.exists(checkpoint_dir):
-      print("create checkpoint directory: {}".format(checkpoint_dir))
-      os.mkdir(checkpoint_dir)
     if self.load_checkpoint:
-      print('loading checkpoint...')
-      self.net.load(checkpoint_file)
-      print('checkpoint loaded success')
-      with open(data_file, 'rb') as f:
-        print('loading train_data...')
-        self.train_data_history= pickle.load(f)
-      print('train_data loaded success, total length :', len(self.train_data_history))
-
-    for iteration in range(self.iterations):
-      print(f"Starting iteration {iteration + 1}/{self.iterations}...")
+      self.load_all_data()
+    for i in range(self.iterations):
+      self.iteration += 1
+      print(f"Starting iteration {self.iteration}/{self.iterations}...")
       iteration_data = self._run_iteration()
 
       # make new train data
@@ -103,6 +95,9 @@ class Train:
       with open(data_file, 'wb+') as f:
         pickle.dump(self.train_data_history, f)
 
+      # 保存元数据
+      self.save_meta()
+
   def _run_iteration(self):
     self.ai.reset()
     iteration_data = []
@@ -151,3 +146,32 @@ class Train:
     self.ai.displayPerformance()
 
     return iteration_data
+
+  def load_all_data(self):
+    if not self.load_checkpoint:
+      return None
+    # 创建文件夹
+    if not os.path.exists(checkpoint_dir):
+      print("create checkpoint directory: {}".format(checkpoint_dir))
+      os.mkdir(checkpoint_dir)
+    print('loading checkpoint from', checkpoint_file)
+    self.net.load(checkpoint_file)
+    print('checkpoint loaded success')
+    with open(data_file, 'rb') as f:
+      print('loading train_data from', data_file)
+      self.train_data_history = pickle.load(f)
+    print('train_data loaded success, total length :', len(self.train_data_history))
+    print('loading meta from ', meta_file)
+    with open(meta_file, 'rb') as f:
+      history_data = pickle.load(f)
+      self.iteration = history_data["iteration"]
+      self.pitting_history = history_data["pitting_history"]
+      print('meta loaded success, iteration:', self.iteration, 'pitting_history:', self.pitting_history)
+
+  def save_meta(self):
+    with open(meta_file, 'wb+') as f:
+      history_data = {
+        "iteration": self.iteration,
+        "pitting_history": self.pitting_history
+      }
+      pickle.dump(history_data, f)
