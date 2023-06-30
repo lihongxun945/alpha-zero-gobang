@@ -7,7 +7,7 @@ class MCTSPlayer:
   def __init__(self, board, simulation_num=400, net=None):
     if (net is None):
       net = Net(board.size)
-      net.load('checkpoint/best_checkpoint.h5')
+      net.load(f'checkpoint_{board.size}/best_checkpoint.h5')
     self.mcts = MCTS(board=board, net=net, simulation_num=simulation_num, self_play=False)
 
   def move(self):
