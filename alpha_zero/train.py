@@ -49,7 +49,7 @@ class Train:
     for i in range(self.iterations):
       self.iteration += 1
       # 动态学习速率
-      lr = 0.001 if self.iteration <= learning_rate_threshold else 0.0001
+      lr = 0.001 if self.iteration <= learning_rate_threshold else 0.0002
       self.net.set_lr(lr)
       print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Starting iteration {self.iteration}/{self.iterations}...")
       print('current lr:', self.net.get_lr())
