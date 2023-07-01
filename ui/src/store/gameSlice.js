@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { STATUS } from '../config';
+import { STATUS, board_size } from '../config';
 
 axios.defaults.baseURL = 'http://127.0.0.1:5000/';
 
@@ -52,7 +52,8 @@ export const gameSlice = createSlice({
       state.status = action.payload;
     },
     doHumMove: (state, action) => {
-      state.board[action.payload[0]][action.payload[1]] = state.currentPlayer;
+      const location = action.payload
+      state.board[Math.floor(location / board_size)][location % board_size] = state.currentPlayer;
       state.currentPlayer = -state.currentPlayer;
     },
   },
