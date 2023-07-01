@@ -1,0 +1,68 @@
+.board {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  height: 350px;
+  width: 350px;
+  margin: auto;
+}
+
+.board-row {
+  display: flex;
+}
+
+.cell {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cell::before,
+.cell::after {
+  content: "";
+  position: absolute;
+  background: #000;
+}
+
+.cell::before {
+  left: 50%;
+  height: 100%;
+  width: 1px;
+}
+
+.cell::after {
+  top: 50%;
+  width: 100%;
+  height: 1px;
+}
+
+.cell.top::before {
+  top: 50%;
+}
+.cell.bottom::before {
+  bottom: 50%;
+}
+.cell.left::after {
+  left: 50%;
+}
+.cell.right::after {
+  right: 50%;
+}
+
+
+.piece {
+  width: 70%;
+  height: 70%;
+  border-radius: 50%;
+  position: relative;
+  z-index: 10;
+}
+
+.piece.black {
+  background: #000;
+}
+
+.piece.white {
+  background: #fff;
+}

@@ -28,8 +28,13 @@ from flask import Flask, request, jsonify
 import json
 from collections import OrderedDict
 from uuid import uuid4
+from flask_cors import CORS
+
+MAX_BOARD_SIZE = 15
+MAX_SIMULATION_NUM = 1000
 
 app = Flask(__name__)
+CORS(app, origins=['http://localhost:3000'])
 
 # 会话池
 sessions = OrderedDict()
@@ -45,12 +50,20 @@ def create_session():
 
   session_id = str(uuid4()) # 生成唯一会话ID
   size = request.json.get('size', 15)
-  first_player = request.json.get('first_player', 1)
+  hum_first = request.json.get('hum_first', 1)
   simulation_num = request.json.get('simulation_num', 100)
 
-  board = Board(size=size, first_player=first_player)
+  if size > MAX_BOARD_SIZE:
+    size = MAX_BOARD_SIZE
+  if simulation_num > MAX_SIMULATION_NUM:
+    simulation_num = MAX_SIMULATION_NUM
+
+  board = Board(size=size)
   net = Net(size=size)
   mcts = MCTS(board, net, simulation_num=simulation_num)
+
+  if not hum_first:
+    board.move(mcts.move())
 
   sessions[session_id] = {
     'board': board,
@@ -70,6 +83,7 @@ def get_session(session_id):
   mcts = session['mcts']
 
   return jsonify({
+    'session_id': session_id,
     'board': board.board,
     'history': board.history,
     'current_player': board.get_current_player_color(),

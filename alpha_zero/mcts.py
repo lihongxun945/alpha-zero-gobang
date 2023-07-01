@@ -168,7 +168,7 @@ class MCTS:
       node.expand(action_probs, color*v) # Q是当前玩家的胜率，所以要乘以玩家角色
       if show_search_debug_info:
         print('mcts expand:', action_probs.reshape(self.board.size, self.board.size), v)
-      node.update_recursive(-v*color)
+      node.update_recursive(-v*color*0.2)
       return 0
 
   # 返回概率分布

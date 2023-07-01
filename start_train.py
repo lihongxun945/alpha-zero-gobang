@@ -6,8 +6,8 @@ from alpha_zero.mcts import MCTS
 from alpha_zero.train import Train
 
 # 训练参数
-board_size = 9 # 棋盘大小
-win_count = 5 # 多少个棋子连在一起可以赢，可以改成4快速验证算法是否正确
+board_size = 6 # 棋盘大小
+win_count = 4 # 多少个棋子连在一起可以赢，可以改成4快速验证算法是否正确
 iterations = 100 #  训练多少轮
 iteration_epochs = 100 # 每一轮进行多少次对局
 simulation_num = 400 # 蒙特卡洛模拟次数
