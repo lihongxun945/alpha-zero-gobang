@@ -188,6 +188,7 @@ class Board:
     new_board = Board(size=self.size, first_player=self.current_player, win_count=self.win_count)
     new_board.board = copy.deepcopy(self.board)
     new_board.history = copy.deepcopy(self.history)
+    new_board.current_player = self.current_player
     return new_board
 
   def position_to_coordinate(self, position):

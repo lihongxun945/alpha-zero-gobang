@@ -87,11 +87,12 @@ class Train:
       area = Arena(board=self.board, ai1=current_ai, ai2=prev_ai, random_opening=True)
       wins, fails, draws = area.start(match_count=pitting_count, verbose=False)
 
+      win_percent = round(wins/(wins+fails), 2)
       print(f"Pit result, new ai Wins: {wins}, Fails: {fails}, Draws: {draws}")
-      self.pitting_history.append(wins/(wins+fails))
+      self.pitting_history.append(win_percent)
       print("pitting history:", self.pitting_history)
 
-      if wins/(wins+fails) >= accept_threshold:
+      if win_percent >= accept_threshold:
         print("Accept!!! Saving checkpoint...")
         self.net.save(self.checkpoint_file)
 
