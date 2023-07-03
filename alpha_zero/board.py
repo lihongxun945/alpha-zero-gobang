@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import copy
 import numpy as np
+import tensorflow as tf
 
 '''
 帮我用python3写一个五子棋的Board类，实现以下功能：
@@ -211,9 +212,8 @@ class Board:
   这 17 层的平面堆叠在一起，为神经网络提供了关于当前游戏状态的全面信息。神经网络通过这些输入来预测每一步的最佳动作和最终游戏结果。
   '''
   def get_data(self):
-    x = np.zeros((17, self.size, self.size), dtype=np.int8)
+    x = np.zeros((self.size, self.size, 17), dtype=np.int8)
     # 填充棋盘状态
-    history_len = len(self.history)
     black_moves = [position for position, color in self.history if color == 1]
     white_moves = [position for position, color in self.history if color == -1]
     black_len = len(black_moves)
@@ -227,7 +227,7 @@ class Board:
           position = black_moves[j]
           row, col = self.position_to_coordinate(position)
           state[row, col] = 1
-        x[7 - i, :, :] = state
+        x[:, :, 7 - i] = state
 
     # The recent 8 steps of white pieces
     for i in range(8):
@@ -237,17 +237,22 @@ class Board:
           position = white_moves[j]
           row, col = self.position_to_coordinate(position)
           state[row, col] = -1
-        x[15 - i, :, :] = state
+        x[:, :, 15 - i] = state
 
     # 最后一个平面表示当前轮到哪一方落子
-    x[-1, :, :] = self.current_player  # 全部的值都是当前角色
+    x[:, :, -1] = self.current_player  # 全部的值都是当前角色
     return x
 
   # 获取当前棋盘的数据
   # 不同于Alpha Zero，我们的神经网络输入只有 2 个平面，分别表示当前玩家的棋子分布和对手的棋子分布。这样做的好处是训练比较简单
   def get_simple_data(self):
     x = np.array(self.board)
-    return x
+    x = np.reshape(x, (self.size, self.size, 1))
+    current_layer = np.zeros((self.size, self.size), dtype=np.int8)
+    current_layer.fill(self.current_player)
+    current_layer = current_layer.reshape((self.size, self.size, 1))
+    data = tf.concat([x, current_layer], -1)
+    return data
 
 
   def is_game_over(self):

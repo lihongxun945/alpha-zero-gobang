@@ -23,7 +23,7 @@ epochs = 20
 class Net:
   def __init__(self, size=15):
     self.size = size
-    self.build_simple_model()
+    self.build_model()
 
   def build_simple_model(self):
     # game params
@@ -31,9 +31,9 @@ class Net:
     self.action_size = self.size * self.size
 
     # Neural Net
-    self.input_boards = Input(shape=(self.size, self.size))  # s: batch_size x board_x x board_y
+    self.input_boards = Input(shape=(self.size, self.size, 2))  # s: batch_size x board_x x board_y
 
-    x_image = Reshape((self.size, self.size, 1))(self.input_boards)  # batch_size  x board_x x board_y x 1
+    x_image = Reshape((self.size, self.size, 2))(self.input_boards)  # batch_size  x board_x x board_y x 1
     h_conv1 = Activation('relu')(BatchNormalization(axis=3)(
       Conv2D(num_channels, 3, padding='same')(x_image)))  # batch_size  x board_x x board_y x num_channels
     h_conv2 = Activation('relu')(BatchNormalization(axis=3)(
@@ -53,9 +53,9 @@ class Net:
     self.model = Model(inputs=self.input_boards, outputs=[self.pi, self.v])
     self.model.compile(loss=['categorical_crossentropy', 'mean_squared_error'], optimizer=Adam(lr))
 
-  def build_model(self, lr):
+  def build_model(self):
     residual_blocks=9 # 根据AlphzZero论文，这里是19或39个残差块。为了在小棋盘上迅速验证效果，这里进行适当缩减
-    input_shape=(17, self.size, self.size)
+    input_shape=(self.size, self.size, 17)
     # Step 1: 256 filters of kernel size 3x3 with stride 1
     inputs = Input(shape=input_shape)
     x = Conv2D(256, 3, padding="same", strides=1)(inputs)

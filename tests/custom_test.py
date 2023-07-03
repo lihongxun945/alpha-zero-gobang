@@ -25,6 +25,7 @@ class CustomTest(unittest.TestCase):
     board = Board(size=board_size, win_count=win_count)
     for i in [9, 12, 10, 13, 11]:
       board.move(i)
+    print(board.get_data())
 
     # 创建 MCTS 对象
     mcts = MCTS(board=board, net=net, simulation_num=100)
