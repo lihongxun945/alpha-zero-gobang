@@ -125,15 +125,21 @@ class Train:
       epoch_data = []
       while not board.is_game_over():
         temp = int(epoch_steps <= self.temp_threshold)
-        probs = self.ai.getActionProbs(temp=temp)
+        origin_probs = self.ai.getActionProbs(temp=1)
         # print(np.array(probs).reshape(size, size))
+        # 添加狄利克雷噪声，用于选择节点
+        # 创建一个与action_probs长度相同的，但只在有效动作位置上具有非零值的向量，用于狄利克雷噪声
+        valid_moves_mask = board.get_valid_moves_mask()
+        dirichlet_noise_mask = np.where(valid_moves_mask > 0, 1, 1e-8)
+        dirichlet_noise = np.random.dirichlet(0.03 * dirichlet_noise_mask)
+        probs = 0.75*origin_probs+ 0.25 * dirichlet_noise
         if temp == 0:
           max_indices = np.argwhere(probs == np.amax(probs)).flatten()
           action = np.random.choice(max_indices)
         else:
           action = np.random.choice(len(probs), p=probs)
         x = board.get_simple_data()
-        y = [0, probs]
+        y = [0, origin_probs]
         epoch_data.extend(board.enhance_data(x, y))
         # print('move:', action // size, action % size)
         board.move(action)

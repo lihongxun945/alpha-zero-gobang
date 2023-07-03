@@ -16,6 +16,11 @@ c_puct = 1
 show_search_debug_info = False
 EPS = 1e-8
 
+def rnd(num):
+  if num is None:
+    return None
+  return round(num, 4)
+
 class Node:
   def __init__(self, parent=None, P=0, Q=None, action=None):
     self.N = 0  # visit count
@@ -152,12 +157,13 @@ class MCTS:
         action_probs = action_probs + board_copy.get_valid_moves_mask()
         action_probs = action_probs / np.sum(action_probs)
 
+      # 噪声在train中添加，不在这里
       # 顶层节点使用 dirichlet 噪声
-      if self.self_play and node == self.root:
-        # 创建一个与action_probs长度相同的，但只在有效动作位置上具有非零值的向量，用于狄利克雷噪声
-        dirichlet_noise_mask = np.where(valid_moves_mask > 0, 1, 1e-8)
-        dirichlet_noise = np.random.dirichlet(0.03 * dirichlet_noise_mask)
-        action_probs = 0.75*action_probs + 0.25 * dirichlet_noise
+      # if self.self_play and node == self.root:
+      #   # 创建一个与action_probs长度相同的，但只在有效动作位置上具有非零值的向量，用于狄利克雷噪声
+      #   dirichlet_noise_mask = np.where(valid_moves_mask > 0, 1, 1e-8)
+      #   dirichlet_noise = np.random.dirichlet(0.03 * dirichlet_noise_mask)
+      #   action_probs = 0.75*action_probs + 0.25 * dirichlet_noise
 
       if show_search_debug_info:
         print('predict probs', np.array([int(i*1000) for i in action_probs]).reshape(self.board.size, self.board.size))
