@@ -110,8 +110,6 @@ class Board:
   # 1. 如果存在能连成五个子的位置，那么只返回这些位置
   # 2. 返回周围2步之内至少有一个子的位置，以及中间的空位
   def get_valid_moves(self):
-    winning_moves = set()
-
     # 先检查是否存在能连成五子的棋子
     # for row in range(self.size):
     #   for col in range(self.size):
@@ -253,7 +251,7 @@ class Board:
 
 
   def is_game_over(self):
-    return self.get_winner() !=0 or len(self.get_valid_moves()) == 0
+    return self.get_winner() !=0 or len(self.get_valid_moves_all()) == 0
 
   def enhance_data(self, x, y):
     # 原始数据
