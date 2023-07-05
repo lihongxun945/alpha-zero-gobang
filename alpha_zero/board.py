@@ -244,15 +244,33 @@ class Board:
     return x
 
   # 获取当前棋盘的数据
-  # 不同于Alpha Zero，我们的神经网络输入只有 2 个平面，分别表示当前玩家的棋子分布和对手的棋子分布。这样做的好处是训练比较简单
+  # 不同于Alpha Zero，这里我们只保留4个平面，分别是自己的棋子，对手的棋子，最后一次下子的位置，和当前的角色
+  # 我认为统一用1表示有棋子，比用1和-1分别表示角色要更容易训练
   def get_simple_data(self):
-    x = np.array(self.board)
-    x = np.reshape(x, (self.size, self.size, 1))
-    current_layer = np.zeros((self.size, self.size), dtype=np.int8)
-    current_layer.fill(self.current_player)
-    current_layer = current_layer.reshape((self.size, self.size, 1))
-    data = tf.concat([x, current_layer], -1)
-    return data
+    x = np.zeros((self.size, self.size, 4), dtype=np.int8)
+
+    # 确保self.board和self.current_player是numpy数组
+    board = np.array(self.board)
+    current_player = np.array(self.current_player)
+
+    # 自己的状态
+    x[:, :, 0] = (board == current_player).astype(int)
+
+    # 对手的状态
+    x[:, :, 1] = (board == -current_player).astype(int)
+
+    # 最后一步落子位置
+    if len(self.history) > 0:
+        last_position, last_color = self.history[len(self.history)-1]
+
+        x[last_position//self.size, last_position%self.size, 2] = 1
+
+
+    # 最后一个平面表示当前角色是否是先手
+    if self.current_player == self.first_player:
+        x[:, :, 3] = 1
+
+    return x
 
 
   def is_game_over(self):
@@ -262,11 +280,11 @@ class Board:
     # 原始数据
     data_original = (x, y)
     # 水平翻转数据
-    x_flip_horizontal = np.flip(x, len(x.shape)-1)
+    x_flip_horizontal = np.flip(x, 1)
     y_flip_horizontal = [y[0], np.flip(y[1].reshape(self.size, self.size), 1).flatten()]
     data_flip_horizontal = (x_flip_horizontal, y_flip_horizontal)
     # 垂直翻转数据
-    x_flip_vertical = np.flip(x, len(x.shape)-2)
+    x_flip_vertical = np.flip(x, 0)
     y_flip_vertical = [y[0], np.flip(y[1].reshape(self.size, self.size), 0).flatten()]
     data_flip_vertical = (x_flip_vertical, y_flip_vertical)
 

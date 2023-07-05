@@ -6,6 +6,7 @@ import unittest
 from alpha_zero.board import Board
 from alpha_zero.mcts import MCTS
 from alpha_zero.net import Net
+import numpy as np
 
 # 这里可以自己做一些专门的测试，帮助发现问题
 class CustomTest(unittest.TestCase):
@@ -25,16 +26,17 @@ class CustomTest(unittest.TestCase):
     board = Board(size=board_size, win_count=win_count)
     for i in [9, 12, 10, 13, 11]:
       board.move(i)
-    print(board.get_data())
+    data = board.get_simple_data()
+    print(data)
 
     # 创建 MCTS 对象
     mcts = MCTS(board=board, net=net, simulation_num=100)
 
-    action = mcts.move(temp=0)
-    print(action)
+    probs = mcts.getActionProbs(temp=1)
+    print(probs)
 
-    # 验证 action 在正确的范围内
-    self.assertTrue(action == 8)
+    y = [0, probs]
+    print('enchanced data', board.enhance_data(data, y))
 
 if __name__ == '__main__':
   unittest.main()

@@ -138,9 +138,10 @@ class Train:
           action = np.random.choice(max_indices)
         else:
           action = np.random.choice(len(probs), p=probs)
-        x = board.get_data()
+        x = board.get_simple_data()
         y = [0, origin_probs]
         epoch_data.extend(board.enhance_data(x, y))
+        # epoch_data.append((x, y))
         # print('move:', action // size, action % size)
         board.move(action)
         epoch_steps += 1

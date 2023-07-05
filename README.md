@@ -35,7 +35,7 @@ TODO
 - [x] 增加棋盘镜像和翻转功能以增加训练数据
 - [ ] 增加elo评分
 - [ ] 增加UI界面
-- [ ] 优化训练速度
+- [X] 优化训练速度
 - [ ] 增加多进程支持，多显卡并行训练
 
 ## 参考代码
@@ -44,6 +44,7 @@ TODO
 - [alpha-zero-general](https://github.com/suragnair/alpha-zero-general)
 - [Alpha-Gobang-Zero](https://github.com/zhiyiYo/Alpha-Gobang-Zero)
 - [minigo](https://github.com/tensorflow/minigo/blob/master/mcts.py)
+- [AlphaZero_Gomoku](https://github.com/junxiaosong/AlphaZero_Gomoku/tree/master)
 
 非常感谢上述两个项目的作者，你们的开源项目和博客给我非常大的帮助。业余研究使用，有任何错误欢迎指正。
 
