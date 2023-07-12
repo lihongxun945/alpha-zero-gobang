@@ -59,11 +59,11 @@ class Arena:
         if board.get_current_player_color() == 1:
           move = ai1.move()
           board.move(move)
-          self.print("AI 1 moved to position", move)
+          self.print("AI 1 moved to position", board.position_to_coordinate(move))
         else:
           move = ai2.move()
           board.move(move)
-          self.print("AI 2 moved to position", move)
+          self.print("AI 2 moved to position", board.position_to_coordinate(move))
         if verbose:
           board.display()
 
