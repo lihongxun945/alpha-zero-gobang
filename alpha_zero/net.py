@@ -18,12 +18,12 @@ from tensorflow.keras.optimizers import Adam
 import numpy as np
 
 lr = 0.001
-epochs = 20
 
 class Net:
   def __init__(self, size=15):
     self.size = size
-    self.build_model()
+    self.build_simple_model()
+    self.epochs = 20
 
   def build_simple_model(self):
     # game params
@@ -31,7 +31,7 @@ class Net:
     action_size = self.size * self.size
 
     # Neural Net
-    input_boards = Input(shape=(self.size, self.size, 4))  # s: batch_size x board_x x board_y
+    input_boards = Input(shape=(self.size, self.size, 2))  # s: batch_size x board_x x board_y
 
     h_conv1 = Activation('relu')(BatchNormalization(axis=3)(
       Conv2D(num_channels, 3, padding='same')(input_boards)))  # batch_size  x board_x x board_y x num_channels
@@ -104,7 +104,7 @@ class Net:
     return pi.numpy()[0], v.numpy()[0]
 
   def train(self, x, v, pi):
-    return self.model.fit(x, {'policy_head': pi, 'value_head': v}, epochs=epochs)
+    return self.model.fit(x, {'policy_head': pi, 'value_head': v}, epochs=self.epochs)
 
   def save(self, filepath):
     self.model.save_weights(filepath)
@@ -117,3 +117,6 @@ class Net:
 
   def get_lr(self):
     return self.model.optimizer.lr.read_value()
+
+  def set_epochs(self, epochs):
+    self.epochs = epochs

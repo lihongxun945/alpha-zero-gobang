@@ -3,7 +3,7 @@ from alpha_zero.arena import Arena
 from alpha_zero.players import HumanPlayer, MCTSPlayer
 from alpha_zero.board import Board
 
-board_size=11
+board_size=8
 win_count=5
 silumation_num=200
 

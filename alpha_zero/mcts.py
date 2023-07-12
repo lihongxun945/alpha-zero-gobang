@@ -12,7 +12,7 @@
 import numpy as np
 import time
 
-c_puct = 1
+c_puct = 2
 show_search_debug_info = False
 EPS = 1e-8
 

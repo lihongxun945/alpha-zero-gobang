@@ -247,6 +247,11 @@ class Board:
   # 不同于Alpha Zero，这里我们只保留4个平面，分别是自己的棋子，对手的棋子，最后一次下子的位置，和当前的角色
   # 我认为统一用1表示有棋子，比用1和-1分别表示角色要更容易训练
   def get_simple_data(self):
+    x = np.zeros((self.size, self.size, 2), dtype=np.int8)
+    x[:, :, 0] = np.array(self.board)
+    current_player = np.array(self.current_player)
+    x[:, :, 1] = current_player
+    return x
     x = np.zeros((self.size, self.size, 4), dtype=np.int8)
 
     # 确保self.board和self.current_player是numpy数组

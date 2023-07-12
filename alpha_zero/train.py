@@ -19,6 +19,7 @@ from datetime import datetime
 accept_threshold = 0.6
 pitting_count = 20
 learning_rate_threshold = 20
+backup_checkpoint_interval = 10
 
 class Train:
   def __init__(self, board, ai, net, prev_net, iterations=100, iteration_epochs=100, train_data_limit=200000, load_checkpoint=False, temp_threshold=20):
@@ -42,6 +43,11 @@ class Train:
     self.tmp_checkpoint_file = os.path.join(self.checkpoint_dir, 'tmp_checkpoint.h5')
     self.data_file = os.path.join(self.checkpoint_dir, 'train_data.pkl')
     self.meta_file = os.path.join(self.checkpoint_dir, 'meta.pkl')
+  
+  # 每x轮训练，保存一次checkpoint
+  def get_backup_checkpoint_file(self, iteration):
+    return os.path.join(self.checkpoint_dir, f'backup_checkpoint_{iteration}.h5')
+
 
   def start(self):
     if self.load_checkpoint:
@@ -49,7 +55,7 @@ class Train:
     for i in range(self.iterations):
       self.iteration += 1
       # 动态学习速率
-      lr = 0.001 if self.iteration <= learning_rate_threshold else 0.0002
+      lr = 0.001 if self.iteration <= learning_rate_threshold else 0.0005
       self.net.set_lr(lr)
       print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Starting iteration {self.iteration}/{self.iterations}...")
       print('current lr:', self.net.get_lr())
@@ -75,7 +81,7 @@ class Train:
       X, y_v, y_p = zip(*shuffled_train_data)
 
       self.net.save(self.tmp_checkpoint_file)
-      self.prev_net.load(self.tmp_checkpoint_file)
+      self.prev_net.load(self.best_checkpoint_file)
 
       # do the training
       self.net.train(np.array(X), np.array(y_v), np.array(y_p))
@@ -106,6 +112,9 @@ class Train:
 
       # 保存元数据
       self.save_meta()
+
+      if self.iteration % backup_checkpoint_interval == 0:
+        self.net.save(self.get_backup_checkpoint_file(self.iteration))
 
   def _run_iteration(self):
     self.ai.reset()
