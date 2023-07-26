@@ -81,7 +81,8 @@ class Train:
       X, y_v, y_p = zip(*shuffled_train_data)
 
       self.net.save(self.tmp_checkpoint_file)
-      self.prev_net.load(self.best_checkpoint_file)
+      if os.path.exists(self.checkpoint_file):
+        self.prev_net.load(self.checkpoint_file)
 
       # do the training
       self.net.train(np.array(X), np.array(y_v), np.array(y_p))
@@ -104,7 +105,7 @@ class Train:
 
       else:
         print("Discarding checkpoint...")
-        self.net.load(self.tmp_checkpoint_file)
+        # self.net.load(self.tmp_checkpoint_file)
       # 即使没有赢，应该也是存下来比较好
       self.train_data_history = train_data
       with open(self.data_file, 'wb+') as f:
@@ -134,21 +135,22 @@ class Train:
       epoch_data = []
       while not board.is_game_over():
         temp = int(epoch_steps <= self.temp_threshold)
-        origin_probs = self.ai.getActionProbs(temp=1)
+        probs = self.ai.getActionProbs(temp=1)
         # print(np.array(probs).reshape(size, size))
         # 添加狄利克雷噪声，用于选择节点
         # 创建一个与action_probs长度相同的，但只在有效动作位置上具有非零值的向量，用于狄利克雷噪声
         valid_moves_mask = board.get_valid_moves_mask()
         dirichlet_noise_mask = np.where(valid_moves_mask > 0, 1, 1e-8)
         dirichlet_noise = np.random.dirichlet(0.03 * dirichlet_noise_mask)
-        probs = 0.75*origin_probs+ 0.25 * dirichlet_noise
         if temp == 0:
           max_indices = np.argwhere(probs == np.amax(probs)).flatten()
           action = np.random.choice(max_indices)
         else:
-          action = np.random.choice(len(probs), p=probs)
-        x = board.get_simple_data()
-        y = [0, origin_probs]
+          # 加噪声
+          noised_probs = 0.75*probs+ 0.25 * dirichlet_noise
+          action = np.random.choice(len(noised_probs), p=noised_probs)
+        x = board.get_data()
+        y = [0, probs]
         epoch_data.extend(board.enhance_data(x, y))
         # epoch_data.append((x, y))
         # print('move:', action // size, action % size)

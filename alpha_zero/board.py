@@ -26,6 +26,8 @@ import tensorflow as tf
 
 # 以下是Chatgpt4.0 写的代码, 并做了少量修改
 
+simple_data = True
+
 
 class Board:
   def __init__(self, size=15, first_player=1, win_count=5):
@@ -212,6 +214,8 @@ class Board:
   这 17 层的平面堆叠在一起，为神经网络提供了关于当前游戏状态的全面信息。神经网络通过这些输入来预测每一步的最佳动作和最终游戏结果。
   '''
   def get_data(self):
+    if simple_data:
+      return self.get_simple_data()
     x = np.zeros((self.size, self.size, 17), dtype=np.int8)
     # 填充棋盘状态
     black_moves = [position for position, color in self.history if color == 1]
@@ -244,15 +248,15 @@ class Board:
     return x
 
   # 获取当前棋盘的数据
-  # 不同于Alpha Zero，这里我们只保留4个平面，分别是自己的棋子，对手的棋子，最后一次下子的位置，和当前的角色
+  # 不同于Alpha Zero，这里我们只保留3个平面，分别是自己的棋子，对手的棋子，和当前的角色是否是先手
   # 我认为统一用1表示有棋子，比用1和-1分别表示角色要更容易训练
   def get_simple_data(self):
-    x = np.zeros((self.size, self.size, 2), dtype=np.int8)
-    x[:, :, 0] = np.array(self.board)
-    current_player = np.array(self.current_player)
-    x[:, :, 1] = current_player
-    return x
-    x = np.zeros((self.size, self.size, 4), dtype=np.int8)
+    #x = np.zeros((self.size, self.size, 2), dtype=np.int8)
+    #x[:, :, 0] = np.array(self.board)
+    #current_player = np.array(self.current_player)
+    #x[:, :, 1] = current_player
+    #return x
+    x = np.zeros((self.size, self.size, 3), dtype=np.int8)
 
     # 确保self.board和self.current_player是numpy数组
     board = np.array(self.board)
@@ -264,16 +268,9 @@ class Board:
     # 对手的状态
     x[:, :, 1] = (board == -current_player).astype(int)
 
-    # 最后一步落子位置
-    if len(self.history) > 0:
-        last_position, last_color = self.history[len(self.history)-1]
-
-        x[last_position//self.size, last_position%self.size, 2] = 1
-
-
     # 最后一个平面表示当前角色是否是先手
     if self.current_player == self.first_player:
-        x[:, :, 3] = 1
+        x[:, :, 2] = 1
 
     return x
 

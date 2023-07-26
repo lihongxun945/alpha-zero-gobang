@@ -31,7 +31,7 @@ class Net:
     action_size = self.size * self.size
 
     # Neural Net
-    input_boards = Input(shape=(self.size, self.size, 2))  # s: batch_size x board_x x board_y
+    input_boards = Input(shape=(self.size, self.size, 3))  # s: batch_size x board_x x board_y
 
     h_conv1 = Activation('relu')(BatchNormalization(axis=3)(
       Conv2D(num_channels, 3, padding='same')(input_boards)))  # batch_size  x board_x x board_y x num_channels
@@ -53,8 +53,8 @@ class Net:
     self.model.compile(loss=['categorical_crossentropy', 'mean_squared_error'], optimizer=Adam(lr))
 
   def build_model(self):
-    residual_blocks=19 # 根据AlphzZero论文，这里是19或39个残差块。为了在小棋盘上迅速验证效果，小棋盘时候可以进行适当缩减
-    input_shape=(self.size, self.size, 4)
+    residual_blocks=5 # 根据AlphzZero论文，这里是19或39个残差块。为了在小棋盘上迅速验证效果，小棋盘时候可以进行适当缩减
+    input_shape=(self.size, self.size, 3)
     # Step 1: 256 filters of kernel size 3x3 with stride 1
     inputs = Input(shape=input_shape)
     x = Conv2D(256, 3, padding="same", strides=1)(inputs)

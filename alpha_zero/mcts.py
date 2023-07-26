@@ -129,7 +129,7 @@ class MCTS:
       node.update_recursive(-value)
       return winner
     else:
-      train_data = board_copy.get_simple_data()
+      train_data = board_copy.get_data()
       train_data = np.expand_dims(train_data, axis=0)  # 转换为四维张量，因为模型需要 batch 维度
       board_string = board_copy.get_board_string()
       valid_moves_mask = board_copy.get_valid_moves_mask()
