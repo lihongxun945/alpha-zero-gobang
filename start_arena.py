@@ -12,5 +12,5 @@ board = Board(size=board_size, win_count=win_count)
 ai1 = MCTSPlayer(board=board, simulation_num=silumation_num)
 ai2 = HumanPlayer(board)
 
-arena = Arena(board, ai1, ai2, random_opening=False)
+arena = Arena(board, ai1, ai2, random_opening=True)
 arena.start()

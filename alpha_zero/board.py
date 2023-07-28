@@ -186,7 +186,7 @@ class Board:
     return self.size
 
   def copy(self):
-    new_board = Board(size=self.size, first_player=self.current_player, win_count=self.win_count)
+    new_board = Board(size=self.size, first_player=self.first_player, win_count=self.win_count)
     new_board.board = copy.deepcopy(self.board)
     new_board.history = copy.deepcopy(self.history)
     new_board.current_player = self.current_player

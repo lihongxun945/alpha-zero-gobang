@@ -15,6 +15,7 @@ from alpha_zero.players import MCTSPlayer
 from alpha_zero.arena import Arena
 from copy import deepcopy
 from datetime import datetime
+import math
 
 accept_threshold = 0.6
 pitting_count = 20
@@ -36,14 +37,14 @@ class Train:
     self.train_data_history = []
     self.pitting_history = []
     self.init_file_path()
-  
+
   def init_file_path(self):
     self.checkpoint_dir = f'checkpoint_{self.board.size}'
     self.checkpoint_file = os.path.join(self.checkpoint_dir, 'best_checkpoint.h5')
     self.tmp_checkpoint_file = os.path.join(self.checkpoint_dir, 'tmp_checkpoint.h5')
     self.data_file = os.path.join(self.checkpoint_dir, 'train_data.pkl')
     self.meta_file = os.path.join(self.checkpoint_dir, 'meta.pkl')
-  
+
   # 每x轮训练，保存一次checkpoint
   def get_backup_checkpoint_file(self, iteration):
     return os.path.join(self.checkpoint_dir, f'backup_checkpoint_{iteration}.h5')
@@ -82,6 +83,7 @@ class Train:
 
       self.net.save(self.tmp_checkpoint_file)
       if os.path.exists(self.checkpoint_file):
+        print('pre_net load file:', self.checkpoint_file)
         self.prev_net.load(self.checkpoint_file)
 
       # do the training
@@ -150,7 +152,7 @@ class Train:
           noised_probs = 0.75*probs+ 0.25 * dirichlet_noise
           action = np.random.choice(len(noised_probs), p=noised_probs)
         x = board.get_data()
-        y = [0, probs]
+        y = [epoch_steps, probs]
         epoch_data.extend(board.enhance_data(x, y))
         # epoch_data.append((x, y))
         # print('move:', action // size, action % size)
@@ -168,7 +170,9 @@ class Train:
       board.display()
       print('history:', [[[h[0]//board.size, h[0]%board.size], h[1]] for h in board.history])
       for data in epoch_data:
-        iteration_data.append([data[0], winner, data[1][1]])
+        step = data[1][0]
+        v = 1 / (epoch_steps - step)
+        iteration_data.append([data[0], winner * v, data[1][1]])
     print('summary: black wins', black_wins, 'white wins', white_wins, 'draws', draws)
     self.ai.displayPerformance()
 
