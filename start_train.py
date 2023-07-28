@@ -6,13 +6,13 @@ from alpha_zero.mcts import MCTS
 from alpha_zero.train import Train
 
 # 训练参数
-board_size = 8 # 棋盘大小
+board_size = 11 # 棋盘大小
 win_count = 5 # 多少个棋子连在一起可以赢，可以改成4快速验证算法是否正确
 iterations = 100 #  训练多少轮
 iteration_epochs = 200 # 每一轮进行多少次对局
-simulation_num = 200 # 蒙特卡洛模拟次数
-load_checkpoint = True # 是否加载checkpoint和训练数据
-train_data_limit = 200000 # 训练数据最大长度
+simulation_num = 400 # 蒙特卡洛模拟次数
+load_checkpoint = False # 是否加载checkpoint和训练数据
+train_data_limit = 300000 # 训练数据最大长度
 temp_threshold = 10 # 选择落子的温度阈值，小于这个数值会更随机，大于这个数值会总是选最优解。Alpha Zero设置的是30
 
 gpu = True # 启用GPU加速

@@ -24,7 +24,6 @@ class Arena:
     openings = [(center, center)]
     seconds = [[0, 1], [1, 0], [0, -1], [-1, 0], [1, 1], [-1, -1], [1, -1], [-1, 1]]
     second = seconds.pop(random.randint(0, len(seconds)-1))
-    print(seconds)
     openings.append((second[0]+center, second[1]+center))
     thirds = [
       [-2, -2], [-2, -1], [-2, 0], [-2, 1], [-2, 2],
@@ -34,11 +33,9 @@ class Arena:
       [2, -2], [2, -1], [2, 0], [2, 1], [2, 2],
     ]
     thirds.extend(seconds)
-    print(thirds)
     third = thirds.pop(random.randint(0, len(thirds)-1))
     openings.append((third[0]+center, third[1]+center))
     # openings.append((third_d[0]+center, third_d[1]+center))
-    print('random opening', openings)
     return openings
   
   def print(self, *args):
@@ -52,11 +49,14 @@ class Arena:
     ai1_wins = 0
     ai2_wins = 0
     draws = 0
+    opening = self.get_random_opening()
     for _ in range(match_count):
       board = self.board
       if self.random_opening:
-        openings = self.get_random_opening()
-        for move in openings:
+        if _%2==0:
+            opening = self.get_random_opening()
+            print('random opening', opening)
+        for move in opening:
           board.move(board.coordinate_to_position(move))
 
       if verbose:
