@@ -49,6 +49,7 @@ class Arena:
     ai1_wins = 0
     ai2_wins = 0
     draws = 0
+    results = []
     opening = self.get_random_opening()
     for _ in range(match_count):
       board = self.board
@@ -80,20 +81,25 @@ class Arena:
       if winner_color == 1:
         if self.ai1 == ai1:
           ai1_wins += 1
+          results.append(1)
           print("AI 1 wins!")
         else:
           ai2_wins += 1
+          results.append(0)
           print("AI 2 wins!")
       elif winner_color == -1:
         if self.ai2 == ai2:
           ai2_wins += 1
+          results.append(0)
           print("AI 2 wins!")
         else:
           ai1_wins += 1
+          results.append(1)
           print("AI 1 wins!")
       else:
           draws += 1
+          results.append(0.5)
       ai1, ai2 = ai2, ai1
       self.board.reset()
-    return ai1_wins, ai2_wins, draws
+    return ai1_wins, ai2_wins, draws, results
 

@@ -13,6 +13,7 @@ from tqdm import tqdm
 from random import shuffle
 from alpha_zero.players import MCTSPlayer
 from alpha_zero.arena import Arena
+from alpha_zero.elo import calculate_elo
 from copy import deepcopy
 from datetime import datetime
 import math
@@ -36,6 +37,8 @@ class Train:
     self.temp_threshold = temp_threshold
     self.train_data_history = []
     self.pitting_history = []
+    self.elo_history = []
+    self.best_elo = 400 # best checkpoint elo
     self.init_file_path()
 
   def init_file_path(self):
@@ -94,16 +97,26 @@ class Train:
       current_ai = MCTSPlayer(board=self.board, net=self.net, simulation_num=self.ai.simulation_num)
 
       area = Arena(board=self.board, ai1=current_ai, ai2=prev_ai, random_opening=True)
-      wins, fails, draws = area.start(match_count=pitting_count, verbose=False)
+      wins, fails, draws, results = area.start(match_count=pitting_count, verbose=False)
 
       win_percent = round(wins/(wins+fails), 2)
-      print(f"Pit result, new ai Wins: {wins}, Fails: {fails}, Draws: {draws}")
+      print(f"Pit result, new ai Wins: {wins}, Fails: {fails}, Draws: {draws}, results: {results}")
       self.pitting_history.append(win_percent)
       print("pitting history:", self.pitting_history)
+
+      # calculate elo
+      current_elo = 400
+      if len(self.elo_history) > 0:
+        current_elo = self.elo_history[-1]
+      new_elo = calculate_elo(current_elo, self.best_elo, results)
+      self.elo_history.append(new_elo)
+      print('elo history', self.elo_history)
 
       if win_percent >= accept_threshold:
         print("Accept!!! Saving checkpoint...")
         self.net.save(self.checkpoint_file)
+        self.best_elo = new_elo
+        print('update best elo', self.best_elo)
 
       else:
         print("Discarding checkpoint...")
@@ -170,9 +183,9 @@ class Train:
       board.display()
       print('history:', [[[h[0]//board.size, h[0]%board.size], h[1]] for h in board.history])
       for data in epoch_data:
-        step = data[1][0]
-        v = 1 / (epoch_steps - step)
-        iteration_data.append([data[0], winner * v, data[1][1]])
+        # step = data[1][0]
+        # v = 1 / (epoch_steps - step)
+        iteration_data.append([data[0], winner, data[1][1]])
     print('summary: black wins', black_wins, 'white wins', white_wins, 'draws', draws)
     self.ai.displayPerformance()
 
@@ -197,12 +210,19 @@ class Train:
       history_data = pickle.load(f)
       self.iteration = history_data["iteration"]
       self.pitting_history = history_data["pitting_history"]
-      print('meta loaded success, iteration:', self.iteration, 'pitting_history:', self.pitting_history)
+      self.elo_history = history_data["elo_history"]
+      self.best_elo = history_data["best_elo"]
+      print('meta loaded success, iteration:', self.iteration)
+      print('pitting_history:', self.pitting_history)
+      print('best_elo:', self.best_elo)
+      print('elo_history:', self.elo_history)
 
   def save_meta(self):
     with open(self.meta_file, 'wb+') as f:
       history_data = {
         "iteration": self.iteration,
-        "pitting_history": self.pitting_history
+        "pitting_history": self.pitting_history,
+        "elo_history": self.elo_history,
+        "best_elo": self.best_elo,
       }
       pickle.dump(history_data, f)
