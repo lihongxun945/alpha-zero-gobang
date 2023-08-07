@@ -10,10 +10,11 @@ import pickle
 import numpy as np
 import os
 from tqdm import tqdm
-from random import shuffle
+from random import shuffle, random
 from alpha_zero.players import MCTSPlayer
 from alpha_zero.arena import Arena
 from alpha_zero.elo import calculate_elo
+from alpha_zero.opening import get_random_opening
 from copy import deepcopy
 from datetime import datetime
 import math
@@ -22,6 +23,7 @@ accept_threshold = 0.6
 pitting_count = 20
 learning_rate_threshold = 20
 backup_checkpoint_interval = 10
+random_opening_percent = 0.8
 
 class Train:
   def __init__(self, board, ai, net, prev_net, iterations=100, iteration_epochs=100, train_data_limit=200000, load_checkpoint=False, temp_threshold=20):
@@ -142,6 +144,13 @@ class Train:
     for epoch in tqdm(range(self.iteration_epochs), desc="Self Play"):
       board = self.board.copy()
       size = board.size
+      
+      random_opening = random() < random_opening_percent
+      if random_opening:
+        openings = get_random_opening(size)
+        print('random opening:', openings)
+        for move in openings:
+          board.move(board.coordinate_to_position(move))
 
       epoch_steps = 0
 
@@ -149,7 +158,7 @@ class Train:
 
       epoch_data = []
       while not board.is_game_over():
-        temp = int(epoch_steps <= self.temp_threshold)
+        temp = 0 if random_opening else int(epoch_steps <= self.temp_threshold) # 已经随机开局的情况下，不需要再随机  
         probs = self.ai.getActionProbs(temp=1)
         # print(np.array(probs).reshape(size, size))
         # 添加狄利克雷噪声，用于选择节点
@@ -183,9 +192,9 @@ class Train:
       board.display()
       print('history:', [[[h[0]//board.size, h[0]%board.size], h[1]] for h in board.history])
       for data in epoch_data:
-        # step = data[1][0]
-        # v = 1 / (epoch_steps - step)
-        iteration_data.append([data[0], winner, data[1][1]])
+        step = data[1][0]
+        v = 1 / (epoch_steps - step)
+        iteration_data.append([data[0], winner*v, data[1][1]])
     print('summary: black wins', black_wins, 'white wins', white_wins, 'draws', draws)
     self.ai.displayPerformance()
 

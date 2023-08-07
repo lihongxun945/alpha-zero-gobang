@@ -11,6 +11,7 @@
 board 有一个 move(position) 方法可以用来走棋，有size可以获取棋盘大小，可以用这两个方法来实现开局
 '''
 import random
+from alpha_zero.opening import get_random_opening
 
 class Arena:
   def __init__(self, board, ai1, ai2, random_opening=True):
@@ -18,25 +19,6 @@ class Arena:
     self.ai1 = ai1
     self.ai2 = ai2
     self.random_opening = random_opening
-
-  def get_random_opening(self):
-    center = self.board.size // 2
-    openings = [(center, center)]
-    seconds = [[0, 1], [1, 0], [0, -1], [-1, 0], [1, 1], [-1, -1], [1, -1], [-1, 1]]
-    second = seconds.pop(random.randint(0, len(seconds)-1))
-    openings.append((second[0]+center, second[1]+center))
-    thirds = [
-      [-2, -2], [-2, -1], [-2, 0], [-2, 1], [-2, 2],
-      [-1, -2], [-1, 2],
-      [0, -2], [0, 2],
-      [1, -2], [1, 2],
-      [2, -2], [2, -1], [2, 0], [2, 1], [2, 2],
-    ]
-    thirds.extend(seconds)
-    third = thirds.pop(random.randint(0, len(thirds)-1))
-    openings.append((third[0]+center, third[1]+center))
-    # openings.append((third_d[0]+center, third_d[1]+center))
-    return openings
   
   def print(self, *args):
     if self.verbose:
@@ -50,12 +32,12 @@ class Arena:
     ai2_wins = 0
     draws = 0
     results = []
-    opening = self.get_random_opening()
+    opening = get_random_opening(self.board.size)
     for _ in range(match_count):
       board = self.board
       if self.random_opening:
         if _%2==0:
-            opening = self.get_random_opening()
+            opening = get_random_opening(self.board.size)
             print('random opening', opening)
         for move in opening:
           board.move(board.coordinate_to_position(move))
