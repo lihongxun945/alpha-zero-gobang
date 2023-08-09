@@ -141,6 +141,9 @@ class Train:
     black_wins = 0
     white_wins = 0
     draws = 0
+
+    epoch_steps = 0
+
     for epoch in tqdm(range(self.iteration_epochs), desc="Self Play"):
       board = self.board.copy()
       size = board.size
@@ -151,14 +154,14 @@ class Train:
         print('random opening:', openings)
         for move in openings:
           board.move(board.coordinate_to_position(move))
+          epoch_steps += 1
 
-      epoch_steps = 0
 
       self.ai.set_board(board)
 
       epoch_data = []
       while not board.is_game_over():
-        temp = 0 if random_opening else int(epoch_steps <= self.temp_threshold) # 已经随机开局的情况下，不需要再随机  
+        temp = int(epoch_steps <= self.temp_threshold)
         probs = self.ai.getActionProbs(temp=1)
         # print(np.array(probs).reshape(size, size))
         # 添加狄利克雷噪声，用于选择节点

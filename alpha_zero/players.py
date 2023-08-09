@@ -25,7 +25,7 @@ class HumanPlayer:
     self.board = board
 
   def move(self, player=1):
-    valid_moves = self.board.get_valid_moves()
+    valid_moves = self.board.get_valid_moves_all()
     while True:
       user_input = input("Please enter your move (x,y): ")
       user_input = user_input.replace(',', ' ').split()
