@@ -1,7 +1,7 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from 'react-redux';
-import { startGame, movePiece } from '../store/gameSlice';
+import { startGame, movePiece, tempMove } from '../store/gameSlice';
 import './board.css';
 import bg from '../assets/bg.jpg';
 import { board_size } from '../config';
@@ -14,18 +14,25 @@ import { board_size } from '../config';
 
 const Board = () => {
   const dispatch = useDispatch();
-  const { board, currentPlayer, history } = useSelector((state) => state.game);
-  
+  const { board, currentPlayer, history, sessionId, size, loading, winner } = useSelector((state) => state.game);
+
   const handleClick = (i, j) => {
-    console.log(i, j)
-    if (board[i][j] === null) {
-      dispatch(movePiece({ player: currentPlayer, position: [i, j] }));
+    if (loading) return;
+    if (board[i][j] === 0) {
+      dispatch(tempMove([i, j]))
+      dispatch(movePiece({ player: currentPlayer, position: i*size+j, sessionId}));
     }
   };
 
+  useEffect(() => {
+    if (winner === 1 || winner === -1) {
+      window.alert(winner === 1 ? '黑棋获胜' : '白棋获胜')
+    }
+  }, [winner]);
+
   const cellStyle = {
-    width: `${350/board_size}px`,
-    height: `${350/board_size}px`,
+    width: `${375/board_size}px`,
+    height: `${375/board_size}px`,
   };
 
   return (
@@ -46,9 +53,21 @@ const Board = () => {
             if (j === board_size - 1) {
               cellClassName += ' right';
             }
+            let pieceClassname = 'piece';
+            if (cell === 1) {
+              pieceClassname += ' black';
+            } else if (cell === -1) {
+              pieceClassname += ' white';
+            }
+            const lastMove = history[history.length-1];
+            let isLastCell = false;
+            if (lastMove[0] === i*board_size+j) {
+              isLastCell = true;
+            }
             return (
               <div key={j} className={cellClassName} style={cellStyle} onClick={() => handleClick(i, j)}>
-                  {cell && <div className={`piece ${cell === 1 ? 'black': 'white'}`}></div>}
+                {cell == 0 ? '' : <div className={pieceClassname}></div>}
+                {isLastCell && <div className="last" />}
               </div>
             )
           })}

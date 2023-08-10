@@ -21,6 +21,7 @@ MCST 包含这几个方法:
 2. move() 走棋
 '''
 import numpy as np
+import tensorflow as tf
 from alpha_zero.net import Net
 from alpha_zero.board import Board
 from alpha_zero.mcts import MCTS
@@ -30,11 +31,13 @@ from collections import OrderedDict
 from uuid import uuid4
 from flask_cors import CORS
 
+tf.config.set_visible_devices([], 'GPU')
+
 MAX_BOARD_SIZE = 15
 MAX_SIMULATION_NUM = 1000
 
 app = Flask(__name__)
-CORS(app, origins=['http://localhost:3000'])
+CORS(app, origins=['http://localhost:3000', 'http://8.136.130.62:3000'])
 
 # 会话池
 sessions = OrderedDict()
@@ -45,13 +48,13 @@ def hello_world():
 
 @app.route('/create_session', methods=['POST'])
 def create_session():
-  if len(sessions) > 100:
+  if len(sessions) > 500:
     sessions.popitem(last=False) # 删除最早创建的会话
 
   session_id = str(uuid4()) # 生成唯一会话ID
   size = request.json.get('size', 15)
   hum_first = request.json.get('hum_first', 1)
-  simulation_num = request.json.get('simulation_num', 100)
+  simulation_num = request.json.get('simulation_num', 200)
 
   if size > MAX_BOARD_SIZE:
     size = MAX_BOARD_SIZE
@@ -60,10 +63,12 @@ def create_session():
 
   board = Board(size=size)
   net = Net(size=size)
+  print(f'checkpoint_{size}/best_checkpoint.h5')
+  net.load(f'checkpoint_{size}/best_checkpoint.h5')
   mcts = MCTS(board, net, simulation_num=simulation_num)
 
-  if not hum_first:
-    board.move(mcts.move())
+  if hum_first != 1:
+    board.move(mcts.move(temp=0))
 
   sessions[session_id] = {
     'board': board,
@@ -107,8 +112,12 @@ def move(session_id):
   board = session['board']
   mcts = session['mcts']
   board.move(location)
-  action = mcts.move()
+  if board.is_game_over():
+    return get_session(session_id)
+  action = mcts.move(temp=0)
   board.move(action)
+  print('hum move', location // board.size, location % board.size)
+  print('com move', action // board.size, action % board.size)
 
   return get_session(session_id)
 

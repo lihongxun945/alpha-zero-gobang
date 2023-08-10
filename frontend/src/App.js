@@ -7,12 +7,17 @@ import { board_size } from './config';
 
 function App() {
   const dispatch = useDispatch();
-  useEffect(() => {
+  const { loading, winner } = useSelector((state) => state.game);
+  const start = () => {
     dispatch(startGame(board_size));
-  }, [])
+  };
   return (
     <div className="App">
       <Board />
+      <div className="buttons">
+        <button onClick={start} disabled={loading}>开始游戏</button>
+      </div>
+      <div className="status"></div>
     </div>
   );
 }

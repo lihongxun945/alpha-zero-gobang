@@ -1,9 +1,13 @@
 .board {
   display: flex;
+  margin: 10px auto;
   flex-direction: column;
   position: relative;
-  height: 350px;
-  width: 350px;
+  height: 375px;
+  width: 375px;
+  max-width: 600px;
+  max-height: 600px;
+  background-size: cover;
 }
 
 .board-row {
@@ -64,4 +68,12 @@
 
 .piece.white {
   background: #fff;
+}
+
+.last {
+  width: 80%;
+  height: 80%;
+  border: 1px solid red;
+  z-index: 100;
+  position: absolute;
 }
