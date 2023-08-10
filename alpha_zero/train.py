@@ -145,9 +145,10 @@ class Train:
     epoch_steps = 0
 
     for epoch in tqdm(range(self.iteration_epochs), desc="Self Play"):
+      epoch_steps = 0
       board = self.board.copy()
       size = board.size
-      
+
       random_opening = random() < random_opening_percent
       if random_opening:
         openings = get_random_opening(size)
