@@ -248,8 +248,7 @@ class Board:
     return x
 
   # 获取当前棋盘的数据
-  # 不同于Alpha Zero，这里我们只保留3个平面，分别是自己的棋子，对手的棋子，和当前的角色是否是先手
-  # 我认为统一用1表示有棋子，比用1和-1分别表示角色要更容易训练
+  # 不同于Alpha Zero，这里我们只保留3个平面，分别是自己的棋子，对手的棋子，最后一步棋的位置
   def get_simple_data(self):
     #x = np.zeros((self.size, self.size, 2), dtype=np.int8)
     #x[:, :, 0] = np.array(self.board)
@@ -268,9 +267,11 @@ class Board:
     # 对手的状态
     x[:, :, 1] = (board == -current_player).astype(int)
 
-    # 最后一个平面表示当前角色是否是先手
-    if self.current_player == self.first_player:
-        x[:, :, 2] = 1
+    # 第三个平面，存储最后一步棋的位置
+    if len(self.history) > 0:
+      last_move = self.history[-1][0]
+      row, col = self.position_to_coordinate(last_move)
+      x[row, col, 2] = 1
 
     return x
 

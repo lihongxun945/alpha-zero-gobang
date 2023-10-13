@@ -196,9 +196,9 @@ class Train:
       board.display()
       print('history:', [[[h[0]//board.size, h[0]%board.size], h[1]] for h in board.history])
       for data in epoch_data:
-        step = data[1][0]
-        v = 1 / (epoch_steps - step)
-        iteration_data.append([data[0], winner*v, data[1][1]])
+        # step = data[1][0]
+        # v = 1 / (epoch_steps - step)
+        iteration_data.append([data[0], winner, data[1][1]])
     print('summary: black wins', black_wins, 'white wins', white_wins, 'draws', draws)
     self.ai.displayPerformance()
 
