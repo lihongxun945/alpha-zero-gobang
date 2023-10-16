@@ -6,9 +6,11 @@ Alpha Zero原理实现的五子棋AI，主要参考了Alpha Zero相关论文和g
 
 ## 如何运行
 
-第一步，安装依赖。因为tensorflow有较多依赖，为了避免冲突，建议先安装conda，然后创建一个新的环境 `conda create -n alphazero python=3.10`, 然后执行 `pip install -r requirements.txt`安装本项目的全部依赖.
-
+第一步，安装依赖。
+因为tensorflow有较多依赖，为了避免冲突，建议先安装conda，然后创建一个新的环境 `conda create -n alphazero python=3.10`, 然后执行 `pip install -r requirements.txt`安装本项目的全部依赖.
 注意以后每次新打开项目都需要 `conda activate alphazero` 
+
+另外需要安装cuda驱动，并且安装cudnn，在ubuntu上安装cudnn执行这个命令即可`sudo apt install nvidia-cudnn`
 
 第二步，启动训练 `python start_train.py`.
 

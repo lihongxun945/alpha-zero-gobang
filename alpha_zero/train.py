@@ -26,7 +26,7 @@ backup_checkpoint_interval = 10
 random_opening_percent = 0.8
 
 class Train:
-  def __init__(self, board, ai, net, prev_net, iterations=100, iteration_epochs=100, train_data_limit=200000, load_checkpoint=False, temp_threshold=20):
+  def __init__(self, board, ai, net, prev_net, iterations=100, iteration_epochs=100, train_data_limit=200000, load_checkpoint=False, temp_ratio=0.9):
     self.board = board
     self.ai = ai
     self.net = net
@@ -36,7 +36,7 @@ class Train:
     self.iteration_epochs = iteration_epochs
     self.data_limit = train_data_limit
     self.load_checkpoint = load_checkpoint
-    self.temp_threshold = temp_threshold
+    self.temp_ratio = temp_ratio
     self.train_data_history = []
     self.pitting_history = []
     self.elo_history = []
@@ -162,7 +162,9 @@ class Train:
 
       epoch_data = []
       while not board.is_game_over():
-        temp = int(epoch_steps <= self.temp_threshold)
+        temp = pow(self.temp_ratio, epoch_steps)
+        if temp <= 0.1:
+          temp = 0
         probs = self.ai.getActionProbs(temp=1)
         # print(np.array(probs).reshape(size, size))
         # 添加狄利克雷噪声，用于选择节点
@@ -177,9 +179,11 @@ class Train:
           # 加噪声
           noised_probs = 0.75*probs+ 0.25 * dirichlet_noise
           action = np.random.choice(len(noised_probs), p=noised_probs)
-        x = board.get_data()
-        y = [epoch_steps, probs]
-        epoch_data.extend(board.enhance_data(x, y))
+        # 开局10步以内，只有10%的概率会记录数据，避免开局数据过多影响学习
+        if epoch_steps > 10 or random() < 0.1:
+          x = board.get_data()
+          y = [epoch_steps, probs]
+          epoch_data.extend(board.enhance_data(x, y))
         # epoch_data.append((x, y))
         # print('move:', action // size, action % size)
         board.move(action)

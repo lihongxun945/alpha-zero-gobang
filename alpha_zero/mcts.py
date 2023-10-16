@@ -126,7 +126,7 @@ class MCTS:
       value = 1 if winner == board_copy.get_current_player_color() else -1
       if show_search_debug_info:
         print('game over update: winner ', winner, 'value ', -value)
-      node.update_recursive(-value*2)
+      node.update_recursive(-value*c_puct)
       return winner
     else:
       train_data = board_copy.get_data()
