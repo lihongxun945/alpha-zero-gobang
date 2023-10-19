@@ -17,13 +17,14 @@ from alpha_zero.elo import calculate_elo
 from alpha_zero.opening import get_random_opening
 from copy import deepcopy
 from datetime import datetime
+from alpha_zero.utils import construct_weights
 import math
 
 accept_threshold = 0.6
 pitting_count = 20
-learning_rate_threshold = 20
 backup_checkpoint_interval = 10
-random_opening_percent = 0.8
+random_opening_percent = 0.5 # 开局随机走法的概率，通过随即开局避免总是走同样的开局，避免先手必胜的情况
+weight_gamma = 0.9 # 权重衰减因子
 
 class Train:
   def __init__(self, board, ai, net, prev_net, iterations=100, iteration_epochs=100, train_data_limit=200000, load_checkpoint=False, temp_ratio=0.9):
@@ -61,8 +62,7 @@ class Train:
     for i in range(self.iterations):
       self.iteration += 1
       # 动态学习速率
-      lr = 0.001 if self.iteration <= learning_rate_threshold else 0.0005
-      self.net.set_lr(lr)
+      # self.net.set_lr(lr)
       print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Starting iteration {self.iteration}/{self.iterations}...")
       print('current lr:', self.net.get_lr())
       iteration_data = self._run_iteration()
@@ -84,7 +84,7 @@ class Train:
       shuffled_train_data = deepcopy(train_data)
       shuffle(shuffled_train_data)
 
-      X, y_v, y_p = zip(*shuffled_train_data)
+      X, y_v, y_p, weights = zip(*shuffled_train_data)
 
       self.net.save(self.tmp_checkpoint_file)
       if os.path.exists(self.checkpoint_file):
@@ -92,7 +92,7 @@ class Train:
         self.prev_net.load(self.checkpoint_file)
 
       # do the training
-      self.net.train(np.array(X), np.array(y_v), np.array(y_p))
+      self.net.train(np.array(X), np.array(y_v), np.array(y_p), np.array(weights))
 
       print("Pitting against previous version...")
       prev_ai = MCTSPlayer(board=self.board, net=self.prev_net, simulation_num=self.ai.simulation_num)
@@ -179,16 +179,18 @@ class Train:
           # 加噪声
           noised_probs = 0.75*probs+ 0.25 * dirichlet_noise
           action = np.random.choice(len(noised_probs), p=noised_probs)
-        # 开局10步以内，只有10%的概率会记录数据，避免开局数据过多影响学习
-        if epoch_steps > 10 or random() < 0.1:
-          x = board.get_data()
-          y = [epoch_steps, probs]
-          epoch_data.extend(board.enhance_data(x, y))
+        # 开局8步以内，只有20%的概率会记录数据，避免开局数据过多影响学习
+        # if epoch_steps >= 8 or random() <= 0.2:
+        x = board.get_data()
+        y = [epoch_steps, probs]
+        epoch_data.extend(board.enhance_data(x, y))
         # epoch_data.append((x, y))
         # print('move:', action // size, action % size)
         board.move(action)
         epoch_steps += 1
 
+      if epoch_steps <= 10 and random() > 0.2: # 10步以内获胜的棋，只保留20%，因为这种棋意义不大
+        continue
       winner = board.get_winner()
       if winner == 1:
           black_wins += 1
@@ -199,10 +201,13 @@ class Train:
       print('#epoch', epoch, ', step ', epoch_steps, 'winner', winner)
       board.display()
       print('history:', [[[h[0]//board.size, h[0]%board.size], h[1]] for h in board.history])
-      for data in epoch_data:
-        # step = data[1][0]
-        # v = 1 / (epoch_steps - step)
-        iteration_data.append([data[0], winner, data[1][1]])
+      weights = construct_weights(epoch_steps, weight_gamma)
+      for i in range(len(epoch_data)):
+        data = epoch_data[i]
+        x, y = data
+        step = y[0]
+        weight = weights[step]
+        iteration_data.append([x, winner, y[1], weight])
     print('summary: black wins', black_wins, 'white wins', white_wins, 'draws', draws)
     self.ai.displayPerformance()
 

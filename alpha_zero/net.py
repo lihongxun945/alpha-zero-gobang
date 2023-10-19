@@ -23,11 +23,11 @@ class Net:
   def __init__(self, size=15):
     self.size = size
     self.build_simple_model()
-    self.epochs = 20
+    self.epochs = 10
 
   def build_simple_model(self):
     # game params
-    num_channels = 512
+    num_channels = 256
     action_size = self.size * self.size
 
     # Neural Net
@@ -103,8 +103,8 @@ class Net:
     #print('predict time', time.time()-start)
     return pi.numpy()[0], v.numpy()[0]
 
-  def train(self, x, v, pi):
-    return self.model.fit(x, {'policy_head': pi, 'value_head': v}, epochs=self.epochs)
+  def train(self, x, v, pi, weights):
+    return self.model.fit(x, {'policy_head': pi, 'value_head': v}, epochs=self.epochs, sample_weight=weights)
 
   def save(self, filepath):
     self.model.save_weights(filepath)

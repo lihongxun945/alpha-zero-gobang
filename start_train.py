@@ -14,7 +14,7 @@ simulation_num = 400 # 蒙特卡洛模拟次数
 load_checkpoint = True # 是否加载checkpoint和训练数据
 train_data_limit = 1000000 # 训练数据最大长度
 # temp_threshold = 4 # 选择落子的温度阈值，小于这个数值会更随机，大于这个数值会总是选最优解。Alpha Zero设置的是30
-temp_ratio = 0.8 # 选择落子的温度阈值，小于这个数值会更随机，大于这个数值会总是选最优解。Alpha Zero设置的是30
+temp_ratio = 0.75 # 温度衰减
 
 gpu = True # 启用GPU加速
 
